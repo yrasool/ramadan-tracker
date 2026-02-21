@@ -38,19 +38,17 @@ Deployment is handled automatically by the `.github/workflows/deploy.yml` GitHub
 
 **Add Firebase config as Repository Secrets:**
 
-The Firebase config is read from environment variables at build time. Add each value as a [repository secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) in **Settings → Secrets and variables → Actions → New repository secret**:
+Four of the seven Firebase config values are already embedded in the code (they're public and tied to the project ID). You only need to add these three secrets — find them in **Firebase Console → Project settings → Your apps → Web app config**:
 
 | Secret name | Where to find it |
 |---|---|
 | `VITE_FIREBASE_API_KEY` | Firebase Console → Project settings → Your apps → Web app config |
-| `VITE_FIREBASE_AUTH_DOMAIN` | same |
-| `VITE_FIREBASE_DATABASE_URL` | Firebase Console → Realtime Database → Data tab |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase Console → Project settings |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Console → Project settings → Your apps |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | same |
 | `VITE_FIREBASE_APP_ID` | same |
 
-> **Note:** Firebase web config values (apiKey, projectId, etc.) are client-side credentials — they are intentionally public and visible in the browser. They do not grant admin access to your project; access is controlled by Firebase Security Rules. Using GitHub Secrets here is optional but keeps the values out of your source code.
+Go to **Settings → Secrets and variables → Actions → New repository secret** to add each one.
+
+> **Note:** Firebase web config values are client-side credentials — intentionally public and visible in the browser. They do not grant admin access; access is controlled by Firebase Security Rules. The values already in the code (`databaseURL`, `projectId`, `authDomain`, `storageBucket`) are safe to commit.
 
 ### Firebase console setup
 
@@ -74,13 +72,10 @@ Opens at `http://localhost:5173`
 Create a `.env.local` file in the project root with your Firebase config for local development:
 ```
 VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
+The other Firebase values (`databaseURL`, `projectId`, `authDomain`, `storageBucket`) are already hardcoded in `src/firebase.js`.
 
 ---
 

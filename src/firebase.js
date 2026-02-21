@@ -3,10 +3,10 @@ import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  authDomain: "ramadan-74897.firebaseapp.com",
+  databaseURL: "https://ramadan-74897-default-rtdb.firebaseio.com",
+  projectId: "ramadan-74897",
+  storageBucket: "ramadan-74897.appspot.com",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
