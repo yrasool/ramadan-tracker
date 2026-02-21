@@ -11,5 +11,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
+let db = null;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch (e) {
+  console.error("Firebase not configured - set VITE_FIREBASE_* secrets in GitHub repo settings.", e.message);
+}
+export { db };
