@@ -1,1 +1,56 @@
-name: Deploy to GitHub Pages\n\non: push:\n  branches:\n    - main\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v3\n      - name: Install Dependencies\n        run: npm install\n      - name: Build\n        run: npm run build\n      - name: Upload Pages Artifact\n        uses: actions/upload-pages-artifact@v3\n        with:\n          path: dist\n\n  deploy:\n    runs-on: ubuntu-latest\n    needs: build\n    steps:\n      - name: Download Pages Artifact\n        uses: actions/download-pages-artifact@v3\n        with:\n          name: pages\n      - name: Deploy to GitHub Pages\n        uses: actions/deploy-pages@v4\n        env:\n          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}\n          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}\n          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}\n          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}\n          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}\n          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}\n          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}\n
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+
+      - name: Run Vite Build with Firebase
+        run: |
+          npm install
+          npm run build --if-present --env VITE_FIREBASE_DATABASE_URL=${{ secrets.VITE_FIREBASE_DATABASE_URL }} VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
