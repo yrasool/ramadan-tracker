@@ -6,6 +6,19 @@ Live site: **https://yrasool.github.io/ramadan-tracker/**
 
 ---
 
+## 🏗 Architecture: GitHub Pages + Firebase
+
+> **Short answer: the app is hosted on GitHub Pages. Firebase is only used as the database.**
+
+| Role | Service | What it does |
+|---|---|---|
+| **Hosting** (website files) | **GitHub Pages** | Serves the built HTML/JS/CSS at `https://yrasool.github.io/ramadan-tracker/`. Deployed automatically by GitHub Actions on every push to `main`. |
+| **Database** (tracker data) | **Firebase Realtime Database** | Stores and live-syncs daily tracker entries between Yusra and Zaminah. The browser talks directly to Firebase — no server needed. |
+
+Firebase is **not** used for hosting. GitHub is **not** used for the database. They each do one job.
+
+---
+
 ## 🚀 GitHub Pages Deployment
 
 Deployment is handled automatically by the `.github/workflows/deploy.yml` GitHub Actions workflow. Every push to `main` triggers a build and deploys the `dist/` folder to GitHub Pages.
