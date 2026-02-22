@@ -7,7 +7,7 @@ const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
 const PRESET_ZIKR = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "Astaghfirullah"];
 
-const today = new Date(2026, 1, 20);
+const today = new Date();
 function getDayNumber(date) {
   const start = new Date(RAMADAN_START); start.setHours(0,0,0,0);
   const d = new Date(date); d.setHours(0,0,0,0);
@@ -132,6 +132,7 @@ export default function App() {
 
   // Live sync from Firebase
   useEffect(() => {
+    if (!db) return;
     const dbRef = ref(db, "tracker");
     const unsub = onValue(dbRef, snap => {
       setAllData(snap.val() || {});
@@ -150,6 +151,7 @@ export default function App() {
   // Debounced save to Firebase
   function handleChange(newData) {
     setLocalDay(newData);
+    if (!db) return;
     if (saveTimer) clearTimeout(saveTimer);
     setSaving(true);
     const t = setTimeout(async () => {
