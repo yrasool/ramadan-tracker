@@ -5,6 +5,7 @@ import { db } from "./firebase";
 const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
+const USER_RECORD_KEYS = { Yusra: "yusra", Zaminah: "zaminah" };
 const PRESET_ZIKR = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "Astaghfirullah"];
 
 const today = new Date();
@@ -33,11 +34,24 @@ function emptyDayData() {
   };
 }
 
+function getUserData(allData, userName) {
+  const key = USER_RECORD_KEYS[userName] || userName?.toLowerCase();
+  return allData?.[key] || allData?.[userName] || allData?.[userName?.toLowerCase()] || {};
+}
+
 function Section({ title, children }) {
+  const [open, setOpen] = useState(true);
   return (
     <div style={s.section}>
-      <div style={s.sectionTitle}>{title}</div>
-      {children}
+      <button type="button" onClick={() => setOpen(v => !v)} style={s.sectionDoorBtn}>
+        <span style={s.sectionTitle}>{title}</span>
+        <span style={s.sectionHint}>{open ? "Close door" : "Open door"}</span>
+      </button>
+      <div style={s.doorFrame}>
+        <div style={{ ...s.doorPanel, ...s.doorLeft, ...(open ? s.doorLeftOpen : {}) }} />
+        <div style={{ ...s.doorPanel, ...s.doorRight, ...(open ? s.doorRightOpen : {}) }} />
+        <div style={{ ...s.sectionBody, ...(open ? s.sectionBodyOpen : {}) }}>{children}</div>
+      </div>
     </div>
   );
 }
@@ -143,10 +157,10 @@ export default function App() {
   // When selecting a day, load into local state for editing
   useEffect(() => {
     if (user) {
-      const d = allData?.[user]?.[selectedDay] || emptyDayData();
+      const d = getUserData(allData, user)?.[selectedDay] || emptyDayData();
       setLocalDay(JSON.parse(JSON.stringify(d)));
     }
-  }, [selectedDay, user]);
+  }, [selectedDay, user, allData]);
 
   // Debounced save to Firebase
   function handleChange(newData) {
@@ -155,7 +169,7 @@ export default function App() {
     if (saveTimer) clearTimeout(saveTimer);
     setSaving(true);
     const t = setTimeout(async () => {
-      await set(ref(db, `tracker/${user}/${selectedDay}`), newData);
+      await set(ref(db, `tracker/${USER_RECORD_KEYS[user] || user.toLowerCase()}/${selectedDay}`), newData);
       setSaving(false);
     }, 800);
     setSaveTimer(t);
@@ -164,7 +178,7 @@ export default function App() {
   function calcProgress(u) {
     let filled = 0, total = 0;
     for (let d = 1; d <= todayNum; d++) {
-      const day = allData?.[u]?.[d];
+       const day = getUserData(allData, u)?.[d];
       if (!day) { total += PRESET_ZIKR.length + 2; continue; }
       PRESET_ZIKR.forEach(z => { total++; if (day.zikr?.[z]) filled++; });
       total++; if (day.quranPages) filled++;
@@ -193,7 +207,7 @@ export default function App() {
   );
 
   const friendUser = USERS.find(u => u !== user);
-  const friendDay = allData?.[friendUser]?.[selectedDay] || emptyDayData();
+  const friendDay = getUserData(allData, friendUser)?.[selectedDay] || emptyDayData();
 
   return (
     <div style={s.app}>
@@ -268,10 +282,10 @@ export default function App() {
 }
 
 const s = {
-  app: { minHeight: "100vh", background: "#0f1a14", color: "#e8dcc8", paddingBottom: 60 },
+  app: { minHeight: "100vh", background: "radial-gradient(circle at top,#193425,#0f1a14 45%)", color: "#e8dcc8", paddingBottom: 60, fontFamily: "'Palatino Linotype','Book Antiqua',serif" },
   splash: { minHeight: "100vh", background: "linear-gradient(160deg,#0f1a14 60%,#1a2d1e)", display: "flex", alignItems: "center", justifyContent: "center" },
   splashInner: { textAlign: "center", padding: 40 },
-  bismillah: { fontSize: 22, color: "#c9a96e", marginBottom: 16, letterSpacing: 2 },
+  bismillah: { fontSize: 24, color: "#d4b176", marginBottom: 16, letterSpacing: 2, fontFamily: "'Times New Roman',serif" },
   splashMoon: { fontSize: 72, marginBottom: 8 },
   splashTitle: { fontSize: 38, color: "#e8dcc8", margin: "0 0 6px", fontWeight: "normal" },
   splashSub: { color: "#7eb89a", fontSize: 14, marginBottom: 32 },
@@ -306,8 +320,18 @@ const s = {
   dayHeaderTitle: { fontSize: 20, color: "#c9a96e" },
   readonlyBadge: { fontSize: 12, color: "#5a7a5e", background: "#1a2d1e", padding: "4px 10px", borderRadius: 20 },
   form: { display: "flex", flexDirection: "column", gap: 16 },
-  section: { background: "#111d14", border: "1px solid #2a3d2e", borderRadius: 10, padding: 18 },
-  sectionTitle: { fontSize: 14, color: "#c9a96e", marginBottom: 14 },
+  section: { background: "linear-gradient(180deg,#13251a,#111d14)", border: "1px solid #3d543f", borderRadius: 14, padding: 14, boxShadow: "0 10px 24px rgba(0,0,0,.28)" },
+  sectionDoorBtn: { width: "100%", background: "transparent", border: "1px solid #7d5b2d", borderRadius: 10, color: "#d4b176", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  sectionTitle: { fontSize: 14, color: "#d4b176", letterSpacing: 0.6 },
+  sectionHint: { fontSize: 11, color: "#8fad94", fontStyle: "italic" },
+  doorFrame: { position: "relative", perspective: "900px", overflow: "hidden", borderRadius: 10 },
+  doorPanel: { position: "absolute", top: 0, bottom: 0, width: "50%", background: "linear-gradient(160deg,#5d4220,#7d5b2d 45%,#4f3618)", border: "1px solid rgba(223,178,104,.28)", zIndex: 2, transition: "transform .5s ease" },
+  doorLeft: { left: 0, transformOrigin: "left center" },
+  doorRight: { right: 0, transformOrigin: "right center" },
+  doorLeftOpen: { transform: "rotateY(-100deg)" },
+  doorRightOpen: { transform: "rotateY(100deg)" },
+  sectionBody: { maxHeight: 0, opacity: 0, overflow: "hidden", transition: "max-height .45s ease, opacity .35s ease, padding .35s ease", background: "rgba(12,22,16,.72)", borderRadius: 10, padding: "0 12px" },
+  sectionBodyOpen: { maxHeight: 600, opacity: 1, padding: "12px" },
   zikrGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: 12 },
   zikrItem: { display: "flex", flexDirection: "column", gap: 4 },
   zikrLabel: { fontSize: 12, color: "#7eb89a" },
