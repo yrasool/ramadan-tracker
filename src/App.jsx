@@ -1,21 +1,58 @@
-import { useState, useEffect } from "react";
-import { ref, onValue, set, get } from "firebase/database";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ref, onValue, set } from "firebase/database";
 import { db } from "./firebase";
 
 const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
 const USER_RECORD_KEYS = { Yusra: "yusra", Zaminah: "zaminah" };
-const MAX_SECTION_HEIGHT = 2000;
-const PRESET_ZIKR = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "Astaghfirullah"];
+
+const PRESET_ZIKR = [
+  { key: "SubhanAllah", ar: "سُبحانَ الله", en: "SubhanAllah" },
+  { key: "Alhamdulillah", ar: "الحَمدُ لله", en: "Alhamdulillah" },
+  { key: "AllahuAkbar", ar: "اللهُ أكبَر", en: "Allahu Akbar" },
+  { key: "Astaghfirullah", ar: "أستَغفِرُ الله", en: "Astaghfirullah" },
+];
+
+const DOORS = [
+  { id: "zikr", ar: "الذِّكر", en: "Zikr",
+    zelC1: "#0f2a50", zelC2: "#1a5a9a", zelC3: "#3a9ad0", zelAcc: "#f5c842",
+    panC1: "#162850", panC2: "#0a1830", panStr: "#3a7ab0", panKnk: "#3a8aba",
+    glow: "rgba(26,90,154,.95)", glowD: "rgba(10,40,80,.5)" },
+  { id: "quran", ar: "القُرآن", en: "Quran",
+    zelC1: "#0a2015", zelC2: "#1a5a30", zelC3: "#2aaa60", zelAcc: "#f5c842",
+    panC1: "#102818", panC2: "#081508", panStr: "#2a8a40", panKnk: "#2aaa50",
+    glow: "rgba(26,90,48,.95)", glowD: "rgba(10,40,20,.5)" },
+  { id: "surahs", ar: "السُّوَر", en: "Surahs Recited",
+    zelC1: "#200810", zelC2: "#6a1a28", zelC3: "#c05060", zelAcc: "#f5c842",
+    panC1: "#3a0e18", panC2: "#200810", panStr: "#a03040", panKnk: "#c04050",
+    glow: "rgba(139,34,60,.9)", glowD: "rgba(60,10,20,.5)" },
+  { id: "memorize", ar: "الحِفظ", en: "Memorization",
+    zelC1: "#100820", zelC2: "#3a1a70", zelC3: "#8060d0", zelAcc: "#f5c842",
+    panC1: "#200c40", panC2: "#100820", panStr: "#7050c0", panKnk: "#9070d0",
+    glow: "rgba(80,40,150,.9)", glowD: "rgba(30,10,60,.5)" },
+  { id: "names", ar: "أسماء الله", en: "Names of Allah",
+    zelC1: "#041818", zelC2: "#0a5858", zelC3: "#20c0c0", zelAcc: "#f5c842",
+    panC1: "#083030", panC2: "#041818", panStr: "#20a0a0", panKnk: "#30c0c0",
+    glow: "rgba(13,115,115,.9)", glowD: "rgba(4,44,44,.5)" },
+];
+
+const FLOATING_STARS = [
+  { symbol: "✦", left: "8vw", duration: 14, delay: 0, size: 7 },
+  { symbol: "✧", left: "26vw", duration: 17, delay: 2.5, size: 12 },
+  { symbol: "⋆", left: "44vw", duration: 20, delay: 5, size: 7 },
+  { symbol: "·", left: "62vw", duration: 23, delay: 7.5, size: 12 },
+  { symbol: "✵", left: "80vw", duration: 26, delay: 10, size: 7 },
+];
 
 const today = new Date();
 function getDayNumber(date) {
-  const start = new Date(RAMADAN_START); start.setHours(0,0,0,0);
-  const d = new Date(date); d.setHours(0,0,0,0);
+  const start = new Date(RAMADAN_START); start.setHours(0, 0, 0, 0);
+  const d = new Date(date); d.setHours(0, 0, 0, 0);
   return Math.floor((d - start) / 86400000) + 1;
 }
-const todayNum = getDayNumber(today);
+const todayNumRaw = getDayNumber(today);
+const todayNum = Math.min(Math.max(todayNumRaw, 1), TOTAL_DAYS);
 
 function getDayDate(dayNum) {
   const d = new Date(RAMADAN_START);
@@ -25,7 +62,7 @@ function getDayDate(dayNum) {
 
 function emptyDayData() {
   return {
-    zikr: PRESET_ZIKR.reduce((a, z) => ({ ...a, [z]: "" }), {}),
+    zikr: PRESET_ZIKR.reduce((a, z) => ({ ...a, [z.key]: "" }), {}),
     customZikr: [{ name: "", count: "" }, { name: "", count: "" }],
     quranPages: "",
     quranJuz: "",
@@ -40,113 +77,148 @@ function getUserData(allData, userName) {
   return allData?.[key] || allData?.[userName] || allData?.[userName?.toLowerCase()] || {};
 }
 
-function Section({ title, children }) {
-  const [open, setOpen] = useState(true);
-  return (
-    <div style={s.section}>
-      <button type="button" onClick={() => setOpen(v => !v)} style={s.sectionDoorBtn}>
-        <span style={s.sectionTitle}>{title}</span>
-        <span style={s.sectionHint}>{open ? "Close door" : "Open door"}</span>
-      </button>
-      <div style={s.doorFrame}>
-        <div style={{ ...s.doorPanel, ...s.doorLeft, ...(open ? s.doorLeftOpen : {}) }} />
-        <div style={{ ...s.doorPanel, ...s.doorRight, ...(open ? s.doorRightOpen : {}) }} />
-        <div style={{ ...s.sectionBody, ...(open ? s.sectionBodyOpen : {}) }}>{children}</div>
-      </div>
-    </div>
-  );
+function buildDoorSvg(d) {
+  const grooveYs = [70, 82, 94, 106, 130, 150, 170, 190, 210, 230, 250, 270];
+  const grooveLines = grooveYs
+    .map(y => `<line x1="4" y1="${y}" x2="28" y2="${y}"/><line x1="136" y1="${y}" x2="160" y2="${y}"/>`)
+    .join("");
+
+  const rosettes = [120, 165, 210, 255]
+    .map(y => `<rect x="7" y="${y - 9}" width="18" height="18" transform="rotate(45 16 ${y})"/>
+      <rect x="138" y="${y - 9}" width="18" height="18" transform="rotate(45 147 ${y})"/>`)
+    .join("");
+
+  const dots = [26, 46, 66, 86, 106, 126, 146]
+    .map(x => `<circle cx="${x}" cy="34" r="2"/>`)
+    .join("");
+
+  const thresholdLines = [38, 46, 54, 62, 70, 78, 86, 94, 102, 110, 118, 126]
+    .map(x => `<line x1="${x}" y1="281" x2="${x}" y2="290"/>`)
+    .join("");
+
+  return `
+    <defs>
+      <pattern id="zel-${d.id}" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="${d.zelC1}"/>
+        <polygon points="10,1 13,7 19,7 14,11 16,18 10,14 4,18 6,11 1,7 7,7" fill="${d.zelC2}" stroke="${d.zelAcc}" stroke-width=".45"/>
+        <polygon points="10,5 12,9 16,9 13,12 14,16 10,13 6,16 7,12 4,9 8,9" fill="${d.zelC1}" stroke="${d.zelC3}" stroke-width=".35"/>
+        <circle cx="10" cy="10" r="2.2" fill="${d.zelC3}" opacity=".75"/>
+        <line x1="0" y1="10" x2="20" y2="10" stroke="${d.zelAcc}" stroke-width=".15" opacity=".3"/>
+        <line x1="10" y1="0" x2="10" y2="20" stroke="${d.zelAcc}" stroke-width=".15" opacity=".3"/>
+      </pattern>
+      <clipPath id="aclip-${d.id}"><path d="M 32 285 L 32 120 Q 32 28 82 16 Q 132 28 132 120 L 132 285 Z"/></clipPath>
+      <linearGradient id="stuccoH-${d.id}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#5a3a10"/><stop offset="18%" stop-color="#c8a97a"/>
+        <stop offset="50%" stop-color="#e8d5b0"/><stop offset="82%" stop-color="#c8a97a"/>
+        <stop offset="100%" stop-color="#5a3a10"/>
+      </linearGradient>
+      <linearGradient id="stuccoV-${d.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e0c898"/><stop offset="40%" stop-color="#c8a97a"/>
+        <stop offset="100%" stop-color="#5a3a10"/>
+      </linearGradient>
+      <linearGradient id="panG-${d.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${d.panC1}"/><stop offset="100%" stop-color="${d.panC2}"/>
+      </linearGradient>
+    </defs>
+
+    <rect x="0" y="58" width="32" height="232" fill="url(#stuccoV-${d.id})"/>
+    <rect x="132" y="58" width="32" height="232" fill="url(#stuccoV-${d.id})"/>
+
+    <g stroke="#8a6030" stroke-width=".6" opacity=".55">${grooveLines}</g>
+    <g fill="none" stroke="#c8a97a" stroke-width=".8" opacity=".45">${rosettes}</g>
+
+    <line x1="3" y1="60" x2="3" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+    <line x1="29" y1="60" x2="29" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+    <line x1="135" y1="60" x2="135" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+    <line x1="161" y1="60" x2="161" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+
+    <rect x="0" y="18" width="164" height="42" fill="url(#stuccoH-${d.id})"/>
+    <g fill="none" stroke="#8a6030" stroke-width=".8" opacity=".65">
+      <path d="M 6 28 Q 16 20 26 28 Q 36 20 46 28 Q 56 20 66 28 Q 76 20 86 28 Q 96 20 106 28 Q 116 20 126 28 Q 136 20 146 28 Q 156 20 164 28"/>
+      <path d="M 6 40 Q 16 32 26 40 Q 36 32 46 40 Q 56 32 66 40 Q 76 32 86 40 Q 96 32 106 40 Q 116 32 126 40 Q 136 32 146 40 Q 156 32 164 40"/>
+      <path d="M 6 52 Q 16 44 26 52 Q 36 44 46 52 Q 56 44 66 52 Q 76 44 86 52 Q 96 44 106 52 Q 116 44 126 52 Q 136 44 146 52 Q 156 44 164 52"/>
+    </g>
+    <g fill="#c8a97a" opacity=".4">${dots}</g>
+
+    <ellipse cx="29" cy="289" rx="10" ry="3" fill="#c8a97a" opacity=".7"/>
+    <rect x="24" y="155" width="10" height="134" rx="5" fill="url(#stuccoV-${d.id})" stroke="#c8a97a" stroke-width=".7"/>
+    <rect x="26" y="155" width="6" height="134" rx="3" fill="rgba(255,255,255,.1)"/>
+    <path d="M 18 157 L 18 152 Q 29 138 40 152 L 40 157 Z" fill="#c8a97a" stroke="#f5c842" stroke-width=".8"/>
+    <path d="M 20 151 Q 29 142 38 151" fill="none" stroke="#f5c842" stroke-width=".7"/>
+    <path d="M 22 148 Q 29 140 36 148" fill="none" stroke="#e8d5b0" stroke-width=".5" opacity=".6"/>
+
+    <ellipse cx="135" cy="289" rx="10" ry="3" fill="#c8a97a" opacity=".7"/>
+    <rect x="130" y="155" width="10" height="134" rx="5" fill="url(#stuccoV-${d.id})" stroke="#c8a97a" stroke-width=".7"/>
+    <rect x="132" y="155" width="6" height="134" rx="3" fill="rgba(255,255,255,.1)"/>
+    <path d="M 124 157 L 124 152 Q 135 138 146 152 L 146 157 Z" fill="#c8a97a" stroke="#f5c842" stroke-width=".8"/>
+    <path d="M 126 151 Q 135 142 144 151" fill="none" stroke="#f5c842" stroke-width=".7"/>
+    <path d="M 128 148 Q 135 140 142 148" fill="none" stroke="#e8d5b0" stroke-width=".5" opacity=".6"/>
+
+    <rect x="32" y="120" width="100" height="165" fill="url(#zel-${d.id})" clip-path="url(#aclip-${d.id})"/>
+
+    <path d="M 22 285 L 22 122 Q 22 18 82 6 Q 142 18 142 122 L 142 285" fill="none" stroke="#7a5020" stroke-width="1.2" opacity=".8"/>
+    <path d="M 32 285 L 32 120 Q 32 28 82 16 Q 132 28 132 120 L 132 285" fill="none" stroke="#f5c842" stroke-width="2.8"/>
+    <path d="M 36 285 L 36 123 Q 36 35 82 24 Q 128 35 128 123 L 128 285" fill="none" stroke="#e8d5b0" stroke-width="1.2" opacity=".6"/>
+    <path d="M 40 285 L 40 126 Q 40 42 82 32 Q 124 42 124 126 L 124 285" fill="none" stroke="#c8a97a" stroke-width=".7" opacity=".4"/>
+
+    <path d="M 32 120 Q 32 28 82 16 Q 132 28 132 120 L 128 120 Q 128 34 82 22 Q 36 34 36 120 Z" fill="url(#stuccoH-${d.id})" opacity=".9"/>
+    <g fill="#c8a97a" stroke="#8a6030" stroke-width=".7">
+      <path d="M 32 119 Q 40 107 48 114 Q 56 102 64 111 Q 72 98 82 106 Q 92 98 100 111 Q 108 102 116 114 Q 124 107 132 119"/>
+    </g>
+    <g fill="#d8b98a" stroke="#c8a97a" stroke-width=".6">
+      <path d="M 36 119 Q 42 110 48 116 Q 54 107 60 114 Q 66 105 72 111 Q 78 103 82 108 Q 86 103 92 111 Q 98 105 104 114 Q 110 107 116 116 Q 122 110 128 119"/>
+    </g>
+    <g fill="#e8d5b0" stroke="#c8a97a" stroke-width=".5" opacity=".8">
+      <path d="M 40 119 Q 45 112 50 117 Q 55 110 60 116 Q 65 108 70 114 Q 75 107 82 112 Q 89 107 94 114 Q 99 108 104 116 Q 109 110 114 117 Q 119 112 124 119"/>
+    </g>
+    <g fill="#f5c842" opacity=".7">
+      <circle cx="48" cy="113" r="1.5"/><circle cx="64" cy="110" r="1.5"/>
+      <circle cx="82" cy="105" r="2"/><circle cx="100" cy="110" r="1.5"/>
+      <circle cx="116" cy="113" r="1.5"/>
+    </g>
+
+    <circle cx="82" cy="14" r="10" fill="#3a2008" stroke="#c8a97a" stroke-width="1"/>
+    <polygon points="82,5 84.5,11 91,11 86,15 88,21 82,17 76,21 78,15 73,11 79.5,11" fill="#f5c842" stroke="#e8d5b0" stroke-width=".5"/>
+    <circle cx="82" cy="14" r="4" fill="none" stroke="#f5c842" stroke-width=".8"/>
+    <circle cx="82" cy="14" r="1.5" fill="#f5c842"/>
+
+    <rect x="30" y="281" width="104" height="9" fill="url(#stuccoH-${d.id})" stroke="#c8a97a" stroke-width=".8"/>
+    <rect x="30" y="287" width="104" height="2" fill="#f5c842" opacity=".5"/>
+    <rect x="30" y="281" width="104" height="2" fill="#e8d5b0" opacity=".4"/>
+    <g fill="none" stroke="${d.zelAcc}" stroke-width=".4" opacity=".3">${thresholdLines}</g>
+  `;
 }
 
-function TrackerView({ data }) {
-  const d = data || emptyDayData();
-  return (
-    <div style={s.form}>
-      <Section title="📿 Zikr Count">
-        <div style={s.zikrGrid}>
-          {PRESET_ZIKR.map(z => (
-            <div key={z} style={s.zikrItem}>
-              <label style={s.zikrLabel}>{z}</label>
-              <div style={s.viewValue}>{d.zikr?.[z] || "—"}</div>
-            </div>
-          ))}
-          {(d.customZikr || []).map((cz, i) => cz?.name ? (
-            <div key={i} style={s.zikrItem}>
-              <label style={s.zikrLabel}>{cz.name}</label>
-              <div style={s.viewValue}>{cz.count || "—"}</div>
-            </div>
-          ) : null)}
-        </div>
-      </Section>
-      <Section title="📖 Quran">
-        <div style={s.row2}>
-          <div style={s.field}><label style={s.label}>Pages</label><div style={s.viewValue}>{d.quranPages || "—"}</div></div>
-          <div style={s.field}><label style={s.label}>Juz</label><div style={s.viewValue}>{d.quranJuz || "—"}</div></div>
-        </div>
-      </Section>
-      <Section title="📜 Surahs Recited"><div style={s.viewText}>{d.surahsRecited || "—"}</div></Section>
-      <Section title="🧠 Surahs Memorizing"><div style={s.viewText}>{d.surahsMemorizing || "—"}</div></Section>
-      <Section title="✨ Names of Allah Learned"><div style={s.viewText}>{d.namesOfAllah || "—"}</div></Section>
-    </div>
-  );
-}
-
-function TrackerForm({ data, onChange, disabled }) {
-  const d = data || emptyDayData();
-  function updateZikr(key, val) { onChange({ ...d, zikr: { ...d.zikr, [key]: val } }); }
-  function updateCustom(idx, key, val) {
-    const cz = [...(d.customZikr || [{name:"",count:""},{name:"",count:""}])];
-    cz[idx] = { ...cz[idx], [key]: val };
-    onChange({ ...d, customZikr: cz });
-  }
-  return (
-    <div style={s.form}>
-      <Section title="📿 Zikr Count">
-        <div style={s.zikrGrid}>
-          {PRESET_ZIKR.map(z => (
-            <div key={z} style={s.zikrItem}>
-              <label style={s.zikrLabel}>{z}</label>
-              <input type="number" min="0" placeholder="0" value={d.zikr?.[z] || ""} onChange={e => updateZikr(z, e.target.value)} disabled={disabled} style={s.zikrInput} />
-            </div>
-          ))}
-          {(d.customZikr || [{name:"",count:""},{name:"",count:""}]).map((cz, i) => (
-            <div key={i} style={s.zikrItem}>
-              <input type="text" placeholder={`Custom ${i+1} name`} value={cz.name||""} onChange={e => updateCustom(i,"name",e.target.value)} disabled={disabled} style={{...s.zikrInput,fontSize:12,marginBottom:4}} />
-              <input type="number" min="0" placeholder="0" value={cz.count||""} onChange={e => updateCustom(i,"count",e.target.value)} disabled={disabled} style={s.zikrInput} />
-            </div>
-          ))}
-        </div>
-      </Section>
-      <Section title="📖 Quran">
-        <div style={s.row2}>
-          <div style={s.field}><label style={s.label}>Pages Read</label><input type="number" min="0" placeholder="0" value={d.quranPages||""} onChange={e=>onChange({...d,quranPages:e.target.value})} disabled={disabled} style={s.input} /></div>
-          <div style={s.field}><label style={s.label}>Juz #</label><input type="number" min="1" max="30" placeholder="1" value={d.quranJuz||""} onChange={e=>onChange({...d,quranJuz:e.target.value})} disabled={disabled} style={s.input} /></div>
-        </div>
-      </Section>
-      <Section title="📜 Surahs Recited Today">
-        <textarea placeholder="e.g. Al-Fatiha, Al-Baqarah 1–5..." value={d.surahsRecited||""} onChange={e=>onChange({...d,surahsRecited:e.target.value})} disabled={disabled} style={s.textarea} rows={2} />
-      </Section>
-      <Section title="🧠 Surahs Memorizing / Learned">
-        <textarea placeholder="e.g. Al-Mulk (reviewing), Al-Kahf v1-10 (new)..." value={d.surahsMemorizing||""} onChange={e=>onChange({...d,surahsMemorizing:e.target.value})} disabled={disabled} style={s.textarea} rows={2} />
-      </Section>
-      <Section title="✨ Names of Allah Learned">
-        <textarea placeholder="e.g. Ar-Rahman, Ar-Raheem, Al-Malik..." value={d.namesOfAllah||""} onChange={e=>onChange({...d,namesOfAllah:e.target.value})} disabled={disabled} style={s.textarea} rows={2} />
-      </Section>
-      {disabled && <div style={s.futureBanner}>🌙 This day hasn't arrived yet</div>}
-    </div>
-  );
+function buildPanelSvg(d) {
+  return `
+    <rect width="48" height="175" fill="url(#panG-${d.id})"/>
+    <path d="M 4 28 Q 24 4 44 28" fill="none" stroke="${d.panStr}" stroke-width="1.2"/>
+    <path d="M 8 33 Q 24 12 40 33" fill="none" stroke="${d.panStr}" stroke-width=".7" opacity=".6"/>
+    <polygon points="24,50 26,58 34,58 28,63 30,71 24,66 18,71 20,63 14,58 22,58" fill="none" stroke="${d.panStr}" stroke-width="1.1"/>
+    <circle cx="24" cy="60" r="3.5" fill="none" stroke="${d.panStr}" stroke-width=".5" opacity=".4"/>
+    <circle cx="24" cy="60" r="1.2" fill="${d.panKnk}" opacity=".6"/>
+    <rect x="6" y="82" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+    <rect x="6" y="90" width="36" height="1" fill="${d.panStr}" opacity=".35"/>
+    <rect x="6" y="112" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+    <polygon points="24,128 26,134 32,134 27,138 29,144 24,140 19,144 21,138 16,134 22,134" fill="none" stroke="${d.panStr}" stroke-width=".9"/>
+    <line x1="24" y1="75" x2="24" y2="120" stroke="${d.panStr}" stroke-width=".5" opacity=".4"/>
+    <circle cx="24" cy="158" r="8" fill="none" stroke="#f5c842" stroke-width="1.8"/>
+    <circle cx="24" cy="158" r="4" fill="none" stroke="#c8a97a" stroke-width="1"/>
+    <circle cx="24" cy="158" r="1.8" fill="#f5c842" opacity=".8"/> 
+  `;
 }
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(USERS[0]);
   const [allData, setAllData] = useState({});
-  const [localDay, setLocalDay] = useState(null);
+  const [localDay, setLocalDay] = useState(emptyDayData());
   const [selectedDay, setSelectedDay] = useState(todayNum);
-  const [viewUser, setViewUser] = useState(null);
+  const [activeRoom, setActiveRoom] = useState(null);
+  const [openDoorId, setOpenDoorId] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [saveTimer, setSaveTimer] = useState(null);
-  const userDayData = user ? getUserData(allData, user)?.[selectedDay] : null;
 
-  // Live sync from Firebase
+  const saveTimer = useRef(null);
+
   useEffect(() => {
     if (!db) return;
     const dbRef = ref(db, "tracker");
@@ -156,194 +228,452 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // When selecting a day, load into local state for editing
   useEffect(() => {
-    if (user) {
-      const d = userDayData || emptyDayData();
-      setLocalDay(JSON.parse(JSON.stringify(d)));
-    }
-  }, [selectedDay, user, userDayData]);
+    if (!user) return;
+    const dayData = getUserData(allData, user)?.[selectedDay] || emptyDayData();
+    setLocalDay(JSON.parse(JSON.stringify(dayData)));
+  }, [user, selectedDay, allData]);
 
-  // Debounced save to Firebase
-  function handleChange(newData) {
-    setLocalDay(newData);
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  const userKey = USER_RECORD_KEYS[user] || user?.toLowerCase();
+
+  function persistDay(nextData) {
+    setLocalDay(nextData);
+    setAllData(prev => {
+      const next = { ...prev };
+      const userBucket = { ...(next[userKey] || {}) };
+      userBucket[selectedDay] = nextData;
+      next[userKey] = userBucket;
+      return next;
+    });
+
     if (!db) return;
-    if (saveTimer) clearTimeout(saveTimer);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
     setSaving(true);
-    const t = setTimeout(async () => {
-      await set(ref(db, `tracker/${USER_RECORD_KEYS[user] || user.toLowerCase()}/${selectedDay}`), newData);
+    saveTimer.current = setTimeout(async () => {
+      await set(ref(db, `tracker/${userKey}/${selectedDay}`), nextData);
       setSaving(false);
     }, 800);
-    setSaveTimer(t);
+  }
+
+  function saveField(field, value) {
+    persistDay({ ...localDay, [field]: value });
+  }
+
+  function saveZikr(key, value) {
+    persistDay({ ...localDay, zikr: { ...localDay.zikr, [key]: value } });
+  }
+
+  function saveCustom(index, key, value) {
+    const custom = [...(localDay.customZikr || [{ name: "", count: "" }, { name: "", count: "" }])];
+    custom[index] = { ...custom[index], [key]: value };
+    persistDay({ ...localDay, customZikr: custom });
+  }
+
+  function openRoom(id) {
+    setOpenDoorId(id);
+    setTimeout(() => setActiveRoom(id), 820);
+  }
+
+  function closeRoom() {
+    setActiveRoom(null);
+    setTimeout(() => setOpenDoorId(null), 100);
   }
 
   function calcProgress(u) {
-    let filled = 0, total = 0;
+    let filled = 0;
+    let total = 0;
     for (let d = 1; d <= todayNum; d++) {
-       const day = getUserData(allData, u)?.[d];
-      if (!day) { total += PRESET_ZIKR.length + 2; continue; }
-      PRESET_ZIKR.forEach(z => { total++; if (day.zikr?.[z]) filled++; });
+      const day = getUserData(allData, u)?.[d];
+      if (!day) {
+        total += PRESET_ZIKR.length + 2;
+        continue;
+      }
+      PRESET_ZIKR.forEach(z => { total++; if (day.zikr?.[z.key]) filled++; });
       total++; if (day.quranPages) filled++;
       total++; if (day.namesOfAllah) filled++;
     }
     return total === 0 ? 0 : Math.round((filled / total) * 100);
   }
 
-  if (!user) return (
-    <div style={s.splash}>
-      <div style={s.splashInner}>
-        <div style={s.bismillah}>بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
-        <div style={s.splashMoon}>🌙</div>
-        <h1 style={s.splashTitle}>Ramadan 1447</h1>
-        <p style={s.splashSub}>Feb 19 – Mar 20, 2026 · Day {todayNum} Today</p>
-        <p style={s.splashPrompt}>Who are you?</p>
-        <div style={s.userBtns}>
+  const dayLabel = `Day ${selectedDay} · ${getDayDate(selectedDay)} · ${user}`;
+
+  const courtyardClass = activeRoom ? "courtyard hidden" : "courtyard";
+
+  return (
+    <>
+      <style>{`
+@import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+:root{--sand:#c8a97a;--sand-dark:#8a6a3a;--sand-pale:#e8d5b0;--gold:#f5c842;--gold-dim:#c9a030;--ivory:#fdf6e3;--deep:#06090a;--text-bright:#fff8e8;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--deep);color:var(--text-bright);font-family:'Cormorant Garamond',serif;min-height:100vh;overflow-x:hidden;}
+.geo-bg{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.04;}
+.geo-bg svg{width:100%;height:100%;}
+.z-band{width:100%;height:20px;background:repeating-linear-gradient(90deg,#1a5a8a 0,#1a5a8a 16px,#f5c842 16px,#f5c842 18px,#8b2230 18px,#8b2230 34px,#f5c842 34px,#f5c842 36px,#1e8080 36px,#1e8080 52px,#f5c842 52px,#f5c842 54px,#c8a97a 54px,#c8a97a 70px,#f5c842 70px,#f5c842 72px,#fff8e8 72px,#fff8e8 88px,#f5c842 88px,#f5c842 90px);flex-shrink:0;}
+.courtyard{min-height:100vh;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;padding-bottom:80px;}
+.courtyard.hidden{display:none;}
+.header-arch-svg{width:min(760px,95%);margin:0 auto -10px;display:block;}
+.arabic-main{font-family:'Scheherazade New',serif;font-size:clamp(44px,8vw,82px);color:#fff8e8;text-align:center;display:block;text-shadow:0 0 20px #f5c842,0 0 60px rgba(245,200,66,.5),0 2px 0 #8a6020;animation:shimmer 4s ease-in-out infinite alternate;line-height:1.15;}
+@keyframes shimmer{0%{text-shadow:0 0 15px #f5c842,0 0 40px rgba(245,200,66,.4),0 2px 0 #8a6020;}100%{text-shadow:0 0 40px #f5c842,0 0 90px rgba(245,200,66,.7),0 0 130px rgba(245,200,66,.25),0 2px 0 #8a6020;}}
+.en-title{font-family:'Cinzel Decorative',serif;font-size:clamp(13px,2.2vw,22px);color:var(--gold);letter-spacing:7px;text-align:center;margin-top:6px;text-shadow:0 0 20px rgba(245,200,66,.6);}
+.sub-date{font-size:14px;color:#a0d0c8;letter-spacing:3px;text-align:center;margin-top:5px;}
+.divider{display:flex;align-items:center;gap:10px;margin:22px auto;width:min(420px,85%);}
+.dline{flex:1;height:1px;background:linear-gradient(90deg,transparent,#f5c842,transparent);}
+.dstar{color:#f5c842;font-size:16px;text-shadow:0 0 10px #f5c842;}
+.user-bar{display:flex;gap:0;margin:0 0 28px;border:1.5px solid var(--sand-dark);overflow:hidden;}
+.user-pill{padding:11px 34px;border:none;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:12px;letter-spacing:2px;background:rgba(8,13,16,.9);color:#6a8a7a;transition:all .3s;border-right:1px solid var(--sand-dark);}
+.user-pill:last-child{border-right:none;}
+.user-pill.active{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);text-shadow:0 0 12px rgba(245,200,66,.6);}
+.progress-row{display:flex;gap:28px;margin-bottom:32px;width:min(580px,88%);}
+.pc{flex:1;}
+.pc-name{font-family:'Scheherazade New',serif;font-size:22px;color:#fff8e8;display:flex;justify-content:space-between;margin-bottom:5px;}
+.pc-name span{font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold);}
+.pc-track{height:5px;background:#0e1a14;border:1px solid var(--sand-dark);overflow:hidden;}
+.pc-fill{height:100%;transition:width 1.2s ease;}
+.day-strip{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:720px;width:88%;margin-bottom:44px;}
+.dp{background:transparent;border:1px solid #1a2820;color:#3a6050;padding:4px 8px;font-size:10px;cursor:pointer;transition:all .15s;font-family:'Cormorant Garamond',serif;line-height:1.3;text-align:center;}
+.dp:hover{border-color:var(--gold-dim);color:var(--gold);}
+.dp.today{border-color:var(--sand-dark);color:var(--sand);}
+.dp.selected{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);border-color:var(--gold);}
+.dp.future{opacity:.2;cursor:default;}
+.enter-ar{font-family:'Scheherazade New',serif;font-size:32px;color:#fff8e8;text-align:center;margin-bottom:4px;text-shadow:0 0 20px rgba(245,200,66,.4);}
+.enter-en{font-family:'Cinzel Decorative',serif;font-size:9px;color:var(--sand-dark);letter-spacing:5px;text-align:center;margin-bottom:38px;}
+.doors-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:40px 28px;max-width:840px;width:88%;}
+.door-wrap{display:flex;flex-direction:column;align-items:center;cursor:pointer;}
+.door-outer{position:relative;width:164px;height:290px;filter:drop-shadow(0 12px 40px rgba(0,0,0,.9));transition:filter .35s;}
+.door-wrap:hover .door-outer{filter:drop-shadow(0 12px 50px rgba(0,0,0,.9)) drop-shadow(0 0 28px rgba(245,200,66,.3));}
+.door-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.door-panels-3d{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;display:flex;gap:2px;perspective:700px;z-index:5;}
+.dp3{flex:1;height:100%;position:relative;transition:transform 1.15s cubic-bezier(.25,.46,.45,.94);transform-origin:left center;overflow:hidden;backface-visibility:hidden;}
+.dp3.rp{transform-origin:right center;}
+.dp3-face{width:100%;height:100%;}
+.door-wrap:not(.open):hover .dp3{transform:perspective(700px) rotateY(-14deg);}
+.door-wrap:not(.open):hover .dp3.rp{transform:perspective(700px) rotateY(14deg);}
+.door-wrap.open .dp3{transform:perspective(700px) rotateY(-118deg);}
+.door-wrap.open .dp3.rp{transform:perspective(700px) rotateY(118deg);}
+.door-glow{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;z-index:3;opacity:0;transition:opacity .7s .3s;}
+.door-wrap.open .door-glow{opacity:1;}
+.door-ar-label{font-family:'Scheherazade New',serif;font-size:24px;color:#fff8e8;text-align:center;margin-top:14px;text-shadow:0 0 20px rgba(245,200,66,.7),0 1px 0 #4a2e00;transition:all .3s;}
+.door-en-label{font-family:'Cinzel Decorative',serif;font-size:8px;color:var(--sand-dark);letter-spacing:2px;text-align:center;margin-top:2px;}
+.door-wrap:hover .door-ar-label{color:var(--gold);text-shadow:0 0 30px #f5c842,0 0 60px rgba(245,200,66,.4);}
+
+.room{display:none;min-height:100vh;flex-direction:column;z-index:10;animation:roomIn .85s cubic-bezier(.22,1,.36,1) forwards;}
+.room.active{display:flex;}
+@keyframes roomIn{from{opacity:0;transform:translateY(28px) scale(.97);}to{opacity:1;transform:none;}}
+.room-topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid rgba(200,169,122,.2);}
+.back-btn{background:transparent;border:1px solid var(--sand-dark);color:var(--gold);padding:10px 20px;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:2px;transition:all .2s;}
+.back-btn:hover{background:rgba(200,169,122,.1);border-color:var(--gold);}
+.room-title-block{text-align:center;flex:1;}
+.rtitle-ar{font-family:'Scheherazade New',serif;font-size:clamp(26px,4vw,44px);display:block;}
+.rtitle-en{font-family:'Cinzel Decorative',serif;font-size:clamp(9px,1.3vw,13px);letter-spacing:3px;display:block;margin-top:4px;opacity:.75;}
+.rday-lbl{font-size:12px;letter-spacing:2px;display:block;margin-top:4px;opacity:.6;}
+.room-content{flex:1;padding:36px 28px 70px;max-width:720px;margin:0 auto;width:100%;}
+.fsec{margin-bottom:36px;}
+.fsec-title{font-family:'Scheherazade New',serif;font-size:26px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.fsec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,currentColor 0%,transparent 100%);opacity:.25;}
+.flabel{font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:block;opacity:.8;}
+.zikr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;}
+.zcard{border:1px solid rgba(255,255,255,.07);padding:16px 12px;position:relative;transition:border-color .2s;}
+.zcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.zcard:focus-within{border-color:var(--sand-dark);}
+.zar{font-family:'Scheherazade New',serif;font-size:20px;display:block;margin-bottom:2px;}
+.zen{font-size:10px;opacity:.45;display:block;margin-bottom:10px;font-style:italic;}
+.zinput{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:10px;font-size:22px;font-family:'Cormorant Garamond',serif;text-align:center;width:100%;outline:none;transition:all .2s;}
+.zinput:focus{border-color:var(--gold-dim);box-shadow:0 0 12px rgba(245,200,66,.15);}
+.big-input{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:16px;font-size:16px;font-family:'Cormorant Garamond',serif;width:100%;outline:none;transition:all .2s;line-height:1.7;}
+.big-input:focus{border-color:var(--gold-dim);box-shadow:0 0 18px rgba(245,200,66,.12);}
+textarea.big-input{resize:vertical;}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.czwrap{display:flex;gap:10px;}
+.float-star{position:fixed;pointer-events:none;opacity:0;animation:starUp linear infinite;z-index:0;}
+@keyframes starUp{0%{opacity:0;transform:translateY(100vh);}8%{opacity:.45;}92%{opacity:.45;}100%{opacity:0;transform:translateY(-30px);}}
+      `}</style>
+
+      <div className="geo-bg">
+        <svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <pattern id="gp" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <polygon points="40,4 44,28 68,28 48,44 56,68 40,52 24,68 32,44 12,28 36,28" fill="none" stroke="#c8a97a" strokeWidth=".5"/>
+              <circle cx="40" cy="40" r="6" fill="none" stroke="#c8a97a" strokeWidth=".4"/>
+            </pattern>
+          </defs>
+          <rect width="600" height="600" fill="url(#gp)"/>
+        </svg>
+      </div>
+
+      <div id="courtyard" className={courtyardClass}>
+        <div className="z-band"></div>
+
+        <svg className="header-arch-svg" viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="archGold" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="transparent"/>
+              <stop offset="20%" stopColor="#c8a97a"/>
+              <stop offset="50%" stopColor="#f5c842"/>
+              <stop offset="80%" stopColor="#c8a97a"/>
+              <stop offset="100%" stopColor="transparent"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="155" width="760" height="2" fill="url(#archGold)"/>
+          <path d="M 40 160 L 40 100 Q 40 10 380 4 Q 720 10 720 100 L 720 160" fill="none" stroke="#c8a97a" strokeWidth="2"/>
+          <path d="M 65 160 L 65 105 Q 65 28 380 22 Q 695 28 695 105 L 695 160" fill="none" stroke="#8a6a3a" strokeWidth="1"/>
+          <g fill="none" stroke="#c8a97a" strokeWidth="1.3" opacity=".85">
+            <path d="M 40 120 Q 55 108 70 120 Q 85 108 100 120 Q 115 108 130 120 Q 145 108 160 120 Q 175 108 190 120 Q 205 108 220 120 Q 235 108 250 120 Q 265 108 280 120 Q 295 108 310 120 Q 325 108 340 120 Q 355 108 370 120 Q 380 114 390 120 Q 405 108 420 120 Q 435 108 450 120 Q 465 108 480 120 Q 495 108 510 120 Q 525 108 540 120 Q 555 108 570 120 Q 585 108 600 120 Q 615 108 630 120 Q 645 108 660 120 Q 675 108 690 120 Q 705 108 720 120"/>
+            <path d="M 45 128 Q 56 120 67 128 Q 78 120 89 128 Q 100 120 111 128 Q 122 120 133 128 Q 144 120 155 128 Q 166 120 177 128 Q 188 120 199 128 Q 210 120 221 128 Q 232 120 243 128 Q 254 120 265 128 Q 276 120 287 128 Q 298 120 309 128 Q 320 120 331 128 Q 342 120 353 128 Q 364 120 374 128 Q 380 123 386 128 Q 397 120 408 128 Q 419 120 430 128 Q 441 120 452 128 Q 463 120 474 128 Q 485 120 496 128 Q 507 120 518 128 Q 529 120 540 128 Q 551 120 562 128 Q 573 120 584 128 Q 595 120 606 128 Q 617 120 628 128 Q 639 120 650 128 Q 661 120 672 128 Q 683 120 694 128 Q 705 120 716 128"/>
+          </g>
+          <g fill="none" stroke="#f5c842" strokeWidth=".9" opacity=".8">
+            <circle cx="180" cy="75" r="14"/><circle cx="180" cy="75" r="9"/>
+            <polygon points="180,61 183,71 194,71 186,78 189,89 180,82 171,89 174,78 166,71 177,71" opacity=".7"/>
+            <circle cx="380" cy="12" r="16"/><circle cx="380" cy="12" r="10"/>
+            <polygon points="380,-4 384,8 396,8 387,16 391,28 380,20 369,28 373,16 364,8 376,8" opacity=".7"/>
+            <circle cx="580" cy="75" r="14"/><circle cx="580" cy="75" r="9"/>
+            <polygon points="580,61 583,71 594,71 586,78 589,89 580,82 571,89 574,78 566,71 577,71" opacity=".7"/>
+          </g>
+          <rect x="20" y="90" width="18" height="70" fill="rgba(200,169,122,.15)" stroke="#c8a97a" strokeWidth="1"/>
+          <rect x="722" y="90" width="18" height="70" fill="rgba(200,169,122,.15)" stroke="#c8a97a" strokeWidth="1"/>
+        </svg>
+
+        <div style={{ padding: "0 20px", textAlign: "center" }}>
+          <span className="arabic-main">رَمَضَان مُبَارَك</span>
+          <div className="en-title">Ramadan Mubarak · 1447 H</div>
+          <div className="sub-date">19 Feb – 20 Mar · 2026</div>
+        </div>
+
+        <div className="divider">
+          <div className="dline"></div><span className="dstar">✦</span>
+          <div className="dline"></div><span className="dstar">✧</span>
+          <div className="dline"></div><span className="dstar">✦</span>
+          <div className="dline"></div>
+        </div>
+
+        <div className="user-bar">
           {USERS.map(u => (
-            <button key={u} style={s.userBtn} onClick={() => { setUser(u); setViewUser(u); }}>
+            <button
+              key={u}
+              className={`user-pill ${u === user ? "active" : ""}`}
+              onClick={() => setUser(u)}
+            >
               {u}
             </button>
           ))}
         </div>
-      </div>
-    </div>
-  );
 
-  const friendUser = USERS.find(u => u !== user);
-  const friendDay = getUserData(allData, friendUser)?.[selectedDay] || emptyDayData();
-
-  return (
-    <div style={s.app}>
-      <div style={s.header}>
-        <div style={s.headerLeft}>
-          <span style={s.headerArabic}>رمضان مبارك</span>
-          <span style={s.headerEn}>Ramadan 1447 · {saving ? "Saving..." : "✓ Saved"}</span>
-        </div>
-        <div style={s.headerRight}>
-          <span style={s.loggedAs}>Logged in as <b>{user}</b></span>
-          <button style={s.switchBtn} onClick={() => setUser(null)}>Switch</button>
-        </div>
-      </div>
-
-      <div style={s.progressRow}>
-        {USERS.map(u => {
-          const pct = calcProgress(u);
-          return (
-            <div key={u} style={s.progressCard}>
-              <div style={s.progressLabel}>{u}</div>
-              <div style={s.progressBar}>
-                <div style={{ ...s.progressFill, width: `${pct}%`, background: u === "Yusra" ? "#c9a96e" : "#7eb89a" }} />
+        <div className="progress-row">
+          {USERS.map(u => {
+            const pct = calcProgress(u);
+            return (
+              <div className="pc" key={u}>
+                <div className="pc-name">{u === "Yusra" ? "يُسرى" : "زمينة"} <span>{pct}%</span></div>
+                <div className="pc-track">
+                  <div
+                    className="pc-fill"
+                    style={{
+                      background: u === "Yusra" ? "linear-gradient(90deg,#8a6020,#f5c842)" : "linear-gradient(90deg,#1a6a4a,#4adea0)",
+                      width: `${pct}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div style={s.progressPct}>{pct}%</div>
+            );
+          })}
+        </div>
+
+        <div className="day-strip">
+          {Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1).map(d => {
+            const isFuture = d > todayNum;
+            const isToday = d === todayNum;
+            const isSelected = d === selectedDay;
+            return (
+              <button
+                key={d}
+                className={`dp${isSelected ? " selected" : ""}${isToday ? " today" : ""}${isFuture ? " future" : ""}`}
+                onClick={() => !isFuture && setSelectedDay(d)}
+              >
+                <div>{getDayDate(d)}</div>
+                <div style={{ fontWeight: 600 }}>{d}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="enter-ar">ادخل حجرة</div>
+        <div className="enter-en">Enter a Chamber</div>
+
+        <div className="doors-grid">
+          {DOORS.map(d => (
+            <div
+              key={d.id}
+              className={`door-wrap ${openDoorId === d.id ? "open" : ""}`}
+              id={`door-${d.id}`}
+              onClick={() => openRoom(d.id)}
+            >
+              <div className="door-outer">
+                <svg
+                  className="door-svg"
+                  viewBox="0 0 164 290"
+                  xmlns="http://www.w3.org/2000/svg"
+                  dangerouslySetInnerHTML={{ __html: buildDoorSvg(d) }}
+                />
+                <div className="door-glow" style={{ background: `radial-gradient(ellipse,${d.glow},${d.glowD},transparent)` }} />
+                <div className="door-panels-3d">
+                  <div className="dp3">
+                    <svg className="dp3-face" viewBox="0 0 48 175" xmlns="http://www.w3.org/2000/svg" dangerouslySetInnerHTML={{ __html: buildPanelSvg(d) }} />
+                  </div>
+                  <div className="dp3 rp">
+                    <svg className="dp3-face" viewBox="0 0 48 175" xmlns="http://www.w3.org/2000/svg" dangerouslySetInnerHTML={{ __html: buildPanelSvg(d) }} />
+                  </div>
+                </div>
+              </div>
+              <span className="door-ar-label">{d.ar}</span>
+              <span className="door-en-label">{d.en}</span>
             </div>
-          );
-        })}
-      </div>
-
-      <div style={s.dayGrid}>
-        {Array.from({ length: TOTAL_DAYS }, (_, i) => i + 1).map(d => {
-          const isToday = d === todayNum;
-          const isFuture = d > todayNum;
-          const isSelected = d === selectedDay;
-          return (
-            <button key={d} onClick={() => !isFuture && setSelectedDay(d)} style={{
-              ...s.dayBtn,
-              ...(isSelected ? s.dayBtnSelected : {}),
-              ...(isToday && !isSelected ? s.dayBtnToday : {}),
-              ...(isFuture ? s.dayBtnFuture : {}),
-            }}>
-              <div style={s.dayNum}>{d}</div>
-              <div style={s.dayDate}>{getDayDate(d)}</div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={s.trackerWrap}>
-        <div style={s.viewToggle}>
-          <button style={{ ...s.viewBtn, ...(viewUser === user ? s.viewBtnActive : {}) }} onClick={() => setViewUser(user)}>
-            {user}'s Log
-          </button>
-          <button style={{ ...s.viewBtn, ...(viewUser === friendUser ? s.viewBtnActive : {}) }} onClick={() => setViewUser(friendUser)}>
-            {friendUser}'s Log
-          </button>
+          ))}
         </div>
-
-        <div style={s.dayHeader}>
-          <span style={s.dayHeaderTitle}>Day {selectedDay} · {getDayDate(selectedDay)}</span>
-          {viewUser !== user && <span style={s.readonlyBadge}>👁 Viewing {viewUser}</span>}
-        </div>
-
-        {viewUser === user ? (
-          <TrackerForm data={localDay} onChange={handleChange} disabled={selectedDay > todayNum} />
-        ) : (
-          <TrackerView data={friendDay} />
-        )}
       </div>
-    </div>
+
+      <div id="room-zikr" className={`room ${activeRoom === "zikr" ? "active" : ""}`} style={{ background: "linear-gradient(180deg,#030c1a,#050a14)" }}>
+        <div className="z-band"></div>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Courtyard</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar" style={{ color: "#7ad8ff", textShadow: "0 0 20px #7ad8ff" }}>الذِّكر</span>
+            <span className="rtitle-en" style={{ color: "#50b0e0" }}>Chamber of Zikr</span>
+            <span className="rday-lbl" style={{ color: "#7ad8ff" }}>{dayLabel}</span>
+          </div>
+          <div style={{ width: 120 }}></div>
+        </div>
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#7ad8ff" }}>Daily Remembrance</div>
+            <div className="zikr-grid">
+              {PRESET_ZIKR.map(z => (
+                <div key={z.key} className="zcard" style={{ background: "rgba(26,58,122,.18)" }}>
+                  <span className="zar" style={{ color: "#a8e0ff" }}>{z.ar}</span>
+                  <span className="zen" style={{ color: "#6090b8" }}>{z.en}</span>
+                  <input className="zinput" type="number" min="0" placeholder="0" value={localDay.zikr?.[z.key] || ""} onChange={e => saveZikr(z.key, e.target.value)} />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#7ad8ff" }}>Custom Zikr</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {(localDay.customZikr || [{ name: "", count: "" }, { name: "", count: "" }]).map((cz, i) => (
+                <div className="czwrap" key={i}>
+                  <input className="big-input" style={{ flex: 1 }} placeholder="Your zikr name..." value={cz.name || ""} onChange={e => saveCustom(i, "name", e.target.value)} />
+                  <input className="big-input" style={{ width: 100, flexShrink: 0 }} type="number" min="0" placeholder="0" value={cz.count || ""} onChange={e => saveCustom(i, "count", e.target.value)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="room-quran" className={`room ${activeRoom === "quran" ? "active" : ""}`} style={{ background: "linear-gradient(180deg,#030f06,#040b04)" }}>
+        <div className="z-band"></div>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Courtyard</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar" style={{ color: "#80ffaa", textShadow: "0 0 20px #80ffaa" }}>القُرآن</span>
+            <span className="rtitle-en" style={{ color: "#50d070" }}>Chamber of Quran</span>
+            <span className="rday-lbl" style={{ color: "#80ffaa" }}>{dayLabel}</span>
+          </div>
+          <div style={{ width: 120 }}></div>
+        </div>
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#50d070" }}>Today's Recitation</div>
+            <div className="input-row">
+              <div>
+                <label className="flabel" style={{ color: "#50d070" }}>Pages Read</label>
+                <input className="big-input" type="number" min="0" placeholder="0" value={localDay.quranPages || ""} onChange={e => saveField("quranPages", e.target.value)} />
+              </div>
+              <div>
+                <label className="flabel" style={{ color: "#50d070" }}>Juz Number</label>
+                <input className="big-input" type="number" min="1" max="30" placeholder="1" value={localDay.quranJuz || ""} onChange={e => saveField("quranJuz", e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="room-surahs" className={`room ${activeRoom === "surahs" ? "active" : ""}`} style={{ background: "linear-gradient(180deg,#100408,#0a0306)" }}>
+        <div className="z-band"></div>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Courtyard</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar" style={{ color: "#ffb8a8", textShadow: "0 0 20px #ffb8a8" }}>السُّوَر المَتلُوَّة</span>
+            <span className="rtitle-en" style={{ color: "#e08878" }}>Surahs Recited</span>
+            <span className="rday-lbl" style={{ color: "#ffb8a8" }}>{dayLabel}</span>
+          </div>
+          <div style={{ width: 120 }}></div>
+        </div>
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#ffb8a8" }}>Which Surahs did you recite?</div>
+            <textarea className="big-input" rows="8" placeholder="e.g. Al-Fatiha, Al-Baqarah 1–5, Al-Mulk..." value={localDay.surahsRecited || ""} onChange={e => saveField("surahsRecited", e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      <div id="room-memorize" className={`room ${activeRoom === "memorize" ? "active" : ""}`} style={{ background: "linear-gradient(180deg,#080414,#05020c)" }}>
+        <div className="z-band"></div>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Courtyard</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar" style={{ color: "#c8b0ff", textShadow: "0 0 20px #c8b0ff" }}>الحِفظ</span>
+            <span className="rtitle-en" style={{ color: "#9878e0" }}>Memorization</span>
+            <span className="rday-lbl" style={{ color: "#c8b0ff" }}>{dayLabel}</span>
+          </div>
+          <div style={{ width: 120 }}></div>
+        </div>
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#c8b0ff" }}>Surahs Memorizing / Learned</div>
+            <textarea className="big-input" rows="8" placeholder="e.g. Al-Mulk (reviewing v1–10), Al-Kahf v1–5 (new)..." value={localDay.surahsMemorizing || ""} onChange={e => saveField("surahsMemorizing", e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      <div id="room-names" className={`room ${activeRoom === "names" ? "active" : ""}`} style={{ background: "linear-gradient(180deg,#020c0c,#010808)" }}>
+        <div className="z-band"></div>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Courtyard</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar" style={{ color: "#80ffff", textShadow: "0 0 20px #80ffff" }}>أسماء الله الحُسنى</span>
+            <span className="rtitle-en" style={{ color: "#50d0d0" }}>The Beautiful Names of Allah</span>
+            <span className="rday-lbl" style={{ color: "#80ffff" }}>{dayLabel}</span>
+          </div>
+          <div style={{ width: 120 }}></div>
+        </div>
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#80ffff" }}>Names Learned Today</div>
+            <textarea className="big-input" rows="8" placeholder="e.g. Ar-Rahman (The Most Gracious), Ar-Raheem (The Most Merciful)..." value={localDay.namesOfAllah || ""} onChange={e => saveField("namesOfAllah", e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      {FLOATING_STARS.map((s, i) => (
+        <div
+          key={i}
+          className="float-star"
+          style={{
+            left: s.left,
+            animationDuration: `${s.duration}s`,
+            animationDelay: `${s.delay}s`,
+            fontSize: `${s.size}px`,
+            color: "#f5c842",
+          }}
+        >
+          {s.symbol}
+        </div>
+      ))}
+    </>
   );
 }
-
-const s = {
-  app: { minHeight: "100vh", background: "radial-gradient(circle at top,#193425,#0f1a14 45%)", color: "#e8dcc8", paddingBottom: 60, fontFamily: "'Palatino Linotype','Book Antiqua',serif" },
-  splash: { minHeight: "100vh", background: "linear-gradient(160deg,#0f1a14 60%,#1a2d1e)", display: "flex", alignItems: "center", justifyContent: "center" },
-  splashInner: { textAlign: "center", padding: 40 },
-  bismillah: { fontSize: 24, color: "#d4b176", marginBottom: 16, letterSpacing: 2, fontFamily: "'Times New Roman',serif" },
-  splashMoon: { fontSize: 72, marginBottom: 8 },
-  splashTitle: { fontSize: 38, color: "#e8dcc8", margin: "0 0 6px", fontWeight: "normal" },
-  splashSub: { color: "#7eb89a", fontSize: 14, marginBottom: 32 },
-  splashPrompt: { color: "#c9a96e", fontSize: 18, marginBottom: 20 },
-  userBtns: { display: "flex", gap: 20, justifyContent: "center" },
-  userBtn: { background: "transparent", border: "2px solid #c9a96e", color: "#c9a96e", padding: "14px 48px", fontSize: 20, borderRadius: 8, cursor: "pointer" },
-  header: { background: "#0a120d", borderBottom: "1px solid #2a3d2e", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  headerLeft: { display: "flex", flexDirection: "column" },
-  headerArabic: { fontSize: 18, color: "#c9a96e", letterSpacing: 2 },
-  headerEn: { fontSize: 11, color: "#5a7a5e", marginTop: 2 },
-  headerRight: { display: "flex", alignItems: "center", gap: 12 },
-  loggedAs: { fontSize: 13, color: "#7eb89a" },
-  switchBtn: { background: "transparent", border: "1px solid #3a5a3e", color: "#7eb89a", padding: "4px 12px", borderRadius: 4, cursor: "pointer", fontSize: 12 },
-  progressRow: { display: "flex", gap: 16, padding: "14px 24px", background: "#0a120d", borderBottom: "1px solid #1a2d1e" },
-  progressCard: { flex: 1, display: "flex", alignItems: "center", gap: 10 },
-  progressLabel: { fontSize: 13, color: "#c9a96e", minWidth: 60 },
-  progressBar: { flex: 1, height: 8, background: "#1a2d1e", borderRadius: 4, overflow: "hidden" },
-  progressFill: { height: "100%", borderRadius: 4, transition: "width 0.5s" },
-  progressPct: { fontSize: 12, color: "#5a7a5e", minWidth: 32, textAlign: "right" },
-  dayGrid: { display: "flex", flexWrap: "wrap", gap: 6, padding: "16px 24px", background: "#0d1810", borderBottom: "1px solid #1a2d1e" },
-  dayBtn: { background: "#1a2d1e", border: "1px solid #2a3d2e", color: "#7eb89a", borderRadius: 6, padding: "6px 8px", cursor: "pointer", minWidth: 52, textAlign: "center" },
-  dayBtnSelected: { background: "#c9a96e", color: "#0a120d", border: "1px solid #c9a96e" },
-  dayBtnToday: { border: "2px solid #c9a96e" },
-  dayBtnFuture: { opacity: 0.3, cursor: "default" },
-  dayNum: { fontSize: 15, fontWeight: "bold" },
-  dayDate: { fontSize: 9, opacity: 0.7 },
-  trackerWrap: { maxWidth: 700, margin: "24px auto", padding: "0 16px" },
-  viewToggle: { display: "flex", gap: 8, marginBottom: 16 },
-  viewBtn: { flex: 1, background: "#1a2d1e", border: "1px solid #2a3d2e", color: "#7eb89a", padding: 10, borderRadius: 6, cursor: "pointer", fontSize: 14 },
-  viewBtnActive: { background: "#2a3d2e", border: "1px solid #c9a96e", color: "#c9a96e" },
-  dayHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  dayHeaderTitle: { fontSize: 20, color: "#c9a96e" },
-  readonlyBadge: { fontSize: 12, color: "#5a7a5e", background: "#1a2d1e", padding: "4px 10px", borderRadius: 20 },
-  form: { display: "flex", flexDirection: "column", gap: 16 },
-  section: { background: "linear-gradient(180deg,#13251a,#111d14)", border: "1px solid #3d543f", borderRadius: 14, padding: 14, boxShadow: "0 10px 24px rgba(0,0,0,.28)" },
-  sectionDoorBtn: { width: "100%", background: "transparent", border: "1px solid #7d5b2d", borderRadius: 10, color: "#d4b176", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  sectionTitle: { fontSize: 14, color: "#d4b176", letterSpacing: 0.6 },
-  sectionHint: { fontSize: 11, color: "#8fad94", fontStyle: "italic" },
-  doorFrame: { position: "relative", perspective: "900px", overflow: "hidden", borderRadius: 10 },
-  doorPanel: { position: "absolute", top: 0, bottom: 0, width: "50%", background: "linear-gradient(160deg,#5d4220,#7d5b2d 45%,#4f3618)", border: "1px solid rgba(223,178,104,.28)", zIndex: 2, transition: "transform .5s ease" },
-  doorLeft: { left: 0, transformOrigin: "left center" },
-  doorRight: { right: 0, transformOrigin: "right center" },
-  doorLeftOpen: { transform: "rotateY(-100deg)" },
-  doorRightOpen: { transform: "rotateY(100deg)" },
-  sectionBody: { maxHeight: 0, opacity: 0, overflow: "hidden", transition: "max-height .45s ease, opacity .35s ease, padding .35s ease", background: "rgba(12,22,16,.72)", borderRadius: 10, padding: "0 12px" },
-  sectionBodyOpen: { maxHeight: MAX_SECTION_HEIGHT, opacity: 1, padding: "12px" },
-  zikrGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: 12 },
-  zikrItem: { display: "flex", flexDirection: "column", gap: 4 },
-  zikrLabel: { fontSize: 12, color: "#7eb89a" },
-  zikrInput: { background: "#0a120d", border: "1px solid #2a3d2e", color: "#e8dcc8", borderRadius: 6, padding: "8px 10px", fontSize: 16, outline: "none", width: "100%" },
-  row2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
-  field: { display: "flex", flexDirection: "column", gap: 6 },
-  label: { fontSize: 12, color: "#7eb89a" },
-  input: { background: "#0a120d", border: "1px solid #2a3d2e", color: "#e8dcc8", borderRadius: 6, padding: "10px 12px", fontSize: 16, outline: "none" },
-  textarea: { background: "#0a120d", border: "1px solid #2a3d2e", color: "#e8dcc8", borderRadius: 6, padding: "10px 12px", fontSize: 14, outline: "none", width: "100%", resize: "vertical", lineHeight: 1.6 },
-  viewValue: { fontSize: 22, color: "#c9a96e", fontWeight: "bold" },
-  viewText: { fontSize: 14, color: "#e8dcc8", lineHeight: 1.7, minHeight: 40 },
-  futureBanner: { textAlign: "center", color: "#5a7a5e", fontSize: 14, padding: 16 },
-};
