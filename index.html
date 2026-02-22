@@ -1,13 +1,514 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ramadan Tracker 1447 🌙</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ramadan Tracker 1447</title>
+<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{--sand:#c8a97a;--sand-dark:#8a6a3a;--sand-pale:#e8d5b0;--gold:#f5c842;--gold-dim:#c9a030;--ivory:#fdf6e3;--deep:#06090a;--text-bright:#fff8e8;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--deep);color:var(--text-bright);font-family:'Cormorant Garamond',serif;min-height:100vh;overflow-x:hidden;}
+.geo-bg{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.04;}
+.geo-bg svg{width:100%;height:100%;}
+.z-band{width:100%;height:20px;background:repeating-linear-gradient(90deg,#1a5a8a 0,#1a5a8a 16px,#f5c842 16px,#f5c842 18px,#8b2230 18px,#8b2230 34px,#f5c842 34px,#f5c842 36px,#1e8080 36px,#1e8080 52px,#f5c842 52px,#f5c842 54px,#c8a97a 54px,#c8a97a 70px,#f5c842 70px,#f5c842 72px,#fff8e8 72px,#fff8e8 88px,#f5c842 88px,#f5c842 90px);flex-shrink:0;}
+#courtyard{min-height:100vh;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;padding-bottom:80px;}
+.header-arch-svg{width:min(760px,95%);margin:0 auto -10px;display:block;}
+.arabic-main{font-family:'Scheherazade New',serif;font-size:clamp(44px,8vw,82px);color:#fff8e8;text-align:center;display:block;text-shadow:0 0 20px #f5c842,0 0 60px rgba(245,200,66,.5),0 2px 0 #8a6020;animation:shimmer 4s ease-in-out infinite alternate;line-height:1.15;}
+@keyframes shimmer{0%{text-shadow:0 0 15px #f5c842,0 0 40px rgba(245,200,66,.4),0 2px 0 #8a6020;}100%{text-shadow:0 0 40px #f5c842,0 0 90px rgba(245,200,66,.7),0 0 130px rgba(245,200,66,.25),0 2px 0 #8a6020;}}
+.en-title{font-family:'Cinzel Decorative',serif;font-size:clamp(13px,2.2vw,22px);color:var(--gold);letter-spacing:7px;text-align:center;margin-top:6px;text-shadow:0 0 20px rgba(245,200,66,.6);}
+.sub-date{font-size:14px;color:#a0d0c8;letter-spacing:3px;text-align:center;margin-top:5px;}
+.divider{display:flex;align-items:center;gap:10px;margin:22px auto;width:min(420px,85%);}
+.dline{flex:1;height:1px;background:linear-gradient(90deg,transparent,#f5c842,transparent);}
+.dstar{color:#f5c842;font-size:16px;text-shadow:0 0 10px #f5c842;}
+.user-bar{display:flex;gap:0;margin:0 0 28px;border:1.5px solid var(--sand-dark);overflow:hidden;}
+.user-pill{padding:11px 34px;border:none;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:12px;letter-spacing:2px;background:rgba(8,13,16,.9);color:#6a8a7a;transition:all .3s;border-right:1px solid var(--sand-dark);}
+.user-pill:last-child{border-right:none;}
+.user-pill.active{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);text-shadow:0 0 12px rgba(245,200,66,.6);}
+.progress-row{display:flex;gap:28px;margin-bottom:32px;width:min(580px,88%);}
+.pc{flex:1;}
+.pc-name{font-family:'Scheherazade New',serif;font-size:22px;color:#fff8e8;display:flex;justify-content:space-between;margin-bottom:5px;}
+.pc-name span{font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold);}
+.pc-track{height:5px;background:#0e1a14;border:1px solid var(--sand-dark);overflow:hidden;}
+.pc-fill{height:100%;transition:width 1.2s ease;}
+.day-strip{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:720px;width:88%;margin-bottom:44px;}
+.dp{background:transparent;border:1px solid #1a2820;color:#3a6050;padding:4px 8px;font-size:10px;cursor:pointer;transition:all .15s;font-family:'Cormorant Garamond',serif;line-height:1.3;text-align:center;}
+.dp:hover{border-color:var(--gold-dim);color:var(--gold);}
+.dp.today{border-color:var(--sand-dark);color:var(--sand);}
+.dp.selected{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);border-color:var(--gold);}
+.dp.future{opacity:.2;cursor:default;}
+.enter-ar{font-family:'Scheherazade New',serif;font-size:32px;color:#fff8e8;text-align:center;margin-bottom:4px;text-shadow:0 0 20px rgba(245,200,66,.4);}
+.enter-en{font-family:'Cinzel Decorative',serif;font-size:9px;color:var(--sand-dark);letter-spacing:5px;text-align:center;margin-bottom:38px;}
+.doors-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:40px 28px;max-width:840px;width:88%;}
+
+/* THE MOROCCAN DOOR */
+.door-wrap{display:flex;flex-direction:column;align-items:center;cursor:pointer;}
+.door-outer{position:relative;width:164px;height:290px;filter:drop-shadow(0 12px 40px rgba(0,0,0,.9));transition:filter .35s;}
+.door-wrap:hover .door-outer{filter:drop-shadow(0 12px 50px rgba(0,0,0,.9)) drop-shadow(0 0 28px rgba(245,200,66,.3));}
+.door-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.door-panels-3d{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;display:flex;gap:2px;perspective:700px;z-index:5;}
+.dp3{flex:1;height:100%;position:relative;transition:transform 1.15s cubic-bezier(.25,.46,.45,.94);transform-origin:left center;overflow:hidden;backface-visibility:hidden;}
+.dp3.rp{transform-origin:right center;}
+.dp3-face{width:100%;height:100%;}
+.door-wrap:not(.open):hover .dp3{transform:perspective(700px) rotateY(-14deg);}
+.door-wrap:not(.open):hover .dp3.rp{transform:perspective(700px) rotateY(14deg);}
+.door-wrap.open .dp3{transform:perspective(700px) rotateY(-118deg);}
+.door-wrap.open .dp3.rp{transform:perspective(700px) rotateY(118deg);}
+.door-glow{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;z-index:3;opacity:0;transition:opacity .7s .3s;}
+.door-wrap.open .door-glow{opacity:1;}
+.door-ar-label{font-family:'Scheherazade New',serif;font-size:24px;color:#fff8e8;text-align:center;margin-top:14px;text-shadow:0 0 20px rgba(245,200,66,.7),0 1px 0 #4a2e00;transition:all .3s;}
+.door-en-label{font-family:'Cinzel Decorative',serif;font-size:8px;color:var(--sand-dark);letter-spacing:2px;text-align:center;margin-top:2px;}
+.door-wrap:hover .door-ar-label{color:var(--gold);text-shadow:0 0 30px #f5c842,0 0 60px rgba(245,200,66,.4);}
+
+/* ROOMS */
+.room{display:none;min-height:100vh;flex-direction:column;z-index:10;animation:roomIn .85s cubic-bezier(.22,1,.36,1) forwards;}
+.room.active{display:flex;}
+@keyframes roomIn{from{opacity:0;transform:translateY(28px) scale(.97);}to{opacity:1;transform:none;}}
+.room-topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid rgba(200,169,122,.2);}
+.back-btn{background:transparent;border:1px solid var(--sand-dark);color:var(--gold);padding:10px 20px;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:2px;transition:all .2s;}
+.back-btn:hover{background:rgba(200,169,122,.1);border-color:var(--gold);}
+.room-title-block{text-align:center;flex:1;}
+.rtitle-ar{font-family:'Scheherazade New',serif;font-size:clamp(26px,4vw,44px);display:block;}
+.rtitle-en{font-family:'Cinzel Decorative',serif;font-size:clamp(9px,1.3vw,13px);letter-spacing:3px;display:block;margin-top:4px;opacity:.75;}
+.rday-lbl{font-size:12px;letter-spacing:2px;display:block;margin-top:4px;opacity:.6;}
+.room-content{flex:1;padding:36px 28px 70px;max-width:720px;margin:0 auto;width:100%;}
+.fsec{margin-bottom:36px;}
+.fsec-title{font-family:'Scheherazade New',serif;font-size:26px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.fsec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,currentColor 0%,transparent 100%);opacity:.25;}
+.flabel{font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:block;opacity:.8;}
+.zikr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;}
+.zcard{border:1px solid rgba(255,255,255,.07);padding:16px 12px;position:relative;transition:border-color .2s;}
+.zcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.zcard:focus-within{border-color:var(--sand-dark);}
+.zar{font-family:'Scheherazade New',serif;font-size:20px;display:block;margin-bottom:2px;}
+.zen{font-size:10px;opacity:.45;display:block;margin-bottom:10px;font-style:italic;}
+.zinput{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:10px;font-size:22px;font-family:'Cormorant Garamond',serif;text-align:center;width:100%;outline:none;transition:all .2s;}
+.zinput:focus{border-color:var(--gold-dim);box-shadow:0 0 12px rgba(245,200,66,.15);}
+.big-input{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:16px;font-size:16px;font-family:'Cormorant Garamond',serif;width:100%;outline:none;transition:all .2s;line-height:1.7;}
+.big-input:focus{border-color:var(--gold-dim);box-shadow:0 0 18px rgba(245,200,66,.12);}
+textarea.big-input{resize:vertical;}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.czwrap{display:flex;gap:10px;}
+.float-star{position:fixed;pointer-events:none;opacity:0;animation:starUp linear infinite;z-index:0;}
+@keyframes starUp{0%{opacity:0;transform:translateY(100vh);}8%{opacity:.45;}92%{opacity:.45;}100%{opacity:0;transform:translateY(-30px);}}
+</style>
+</head>
+<body>
+
+<div class="geo-bg"><svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice"><defs><pattern id="gp" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><polygon points="40,4 44,28 68,28 48,44 56,68 40,52 24,68 32,44 12,28 36,28" fill="none" stroke="#c8a97a" stroke-width=".5"/><circle cx="40" cy="40" r="6" fill="none" stroke="#c8a97a" stroke-width=".4"/></pattern></defs><rect width="600" height="600" fill="url(#gp)"/></svg></div>
+
+<div id="courtyard">
+  <div class="z-band"></div>
+
+  <svg class="header-arch-svg" viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="archGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="transparent"/><stop offset="20%" stop-color="#c8a97a"/><stop offset="50%" stop-color="#f5c842"/><stop offset="80%" stop-color="#c8a97a"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+    <rect x="0" y="155" width="760" height="2" fill="url(#archGold)"/>
+    <path d="M 40 160 L 40 100 Q 40 10 380 4 Q 720 10 720 100 L 720 160" fill="none" stroke="#c8a97a" stroke-width="2"/>
+    <path d="M 65 160 L 65 105 Q 65 28 380 22 Q 695 28 695 105 L 695 160" fill="none" stroke="#8a6a3a" stroke-width="1"/>
+    <g fill="none" stroke="#c8a97a" stroke-width="1.3" opacity=".85">
+      <path d="M 40 120 Q 55 108 70 120 Q 85 108 100 120 Q 115 108 130 120 Q 145 108 160 120 Q 175 108 190 120 Q 205 108 220 120 Q 235 108 250 120 Q 265 108 280 120 Q 295 108 310 120 Q 325 108 340 120 Q 355 108 370 120 Q 380 114 390 120 Q 405 108 420 120 Q 435 108 450 120 Q 465 108 480 120 Q 495 108 510 120 Q 525 108 540 120 Q 555 108 570 120 Q 585 108 600 120 Q 615 108 630 120 Q 645 108 660 120 Q 675 108 690 120 Q 705 108 720 120"/>
+      <path d="M 45 128 Q 56 120 67 128 Q 78 120 89 128 Q 100 120 111 128 Q 122 120 133 128 Q 144 120 155 128 Q 166 120 177 128 Q 188 120 199 128 Q 210 120 221 128 Q 232 120 243 128 Q 254 120 265 128 Q 276 120 287 128 Q 298 120 309 128 Q 320 120 331 128 Q 342 120 353 128 Q 364 120 374 128 Q 380 123 386 128 Q 397 120 408 128 Q 419 120 430 128 Q 441 120 452 128 Q 463 120 474 128 Q 485 120 496 128 Q 507 120 518 128 Q 529 120 540 128 Q 551 120 562 128 Q 573 120 584 128 Q 595 120 606 128 Q 617 120 628 128 Q 639 120 650 128 Q 661 120 672 128 Q 683 120 694 128 Q 705 120 716 128"/>
+    </g>
+    <g fill="none" stroke="#f5c842" stroke-width=".9" opacity=".8">
+      <circle cx="180" cy="75" r="14"/><circle cx="180" cy="75" r="9"/>
+      <polygon points="180,61 183,71 194,71 186,78 189,89 180,82 171,89 174,78 166,71 177,71" opacity=".7"/>
+      <circle cx="380" cy="12" r="16"/><circle cx="380" cy="12" r="10"/>
+      <polygon points="380,-4 384,8 396,8 387,16 391,28 380,20 369,28 373,16 364,8 376,8" opacity=".7"/>
+      <circle cx="580" cy="75" r="14"/><circle cx="580" cy="75" r="9"/>
+      <polygon points="580,61 583,71 594,71 586,78 589,89 580,82 571,89 574,78 566,71 577,71" opacity=".7"/>
+    </g>
+    <rect x="20" y="90" width="18" height="70" fill="rgba(200,169,122,.15)" stroke="#c8a97a" stroke-width="1"/>
+    <rect x="722" y="90" width="18" height="70" fill="rgba(200,169,122,.15)" stroke="#c8a97a" stroke-width="1"/>
+  </svg>
+
+  <div style="padding:0 20px;text-align:center;">
+    <span class="arabic-main">رَمَضَان مُبَارَك</span>
+    <div class="en-title">Ramadan Mubarak · 1447 H</div>
+    <div class="sub-date">19 Feb – 20 Mar · 2026</div>
+  </div>
+
+  <div class="divider"><div class="dline"></div><span class="dstar">✦</span><div class="dline"></div><span class="dstar">✧</span><div class="dline"></div><span class="dstar">✦</span><div class="dline"></div></div>
+
+  <div class="user-bar">
+    <button class="user-pill active" onclick="setUser('Yusra')">Yusra</button>
+    <button class="user-pill" onclick="setUser('Zaminah')">Zaminah</button>
+  </div>
+
+  <div class="progress-row">
+    <div class="pc">
+      <div class="pc-name">يُسرى <span id="pct-yusra">0%</span></div>
+      <div class="pc-track"><div class="pc-fill" id="prog-yusra" style="background:linear-gradient(90deg,#8a6020,#f5c842);width:0%"></div></div>
+    </div>
+    <div class="pc">
+      <div class="pc-name">زمينة <span id="pct-zaminah">0%</span></div>
+      <div class="pc-track"><div class="pc-fill" id="prog-zaminah" style="background:linear-gradient(90deg,#1a6a4a,#4adea0);width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="day-strip" id="day-strip"></div>
+
+  <div class="enter-ar">ادخل حجرة</div>
+  <div class="enter-en">Enter a Chamber</div>
+
+  <div class="doors-grid" id="doors-grid"></div>
+</div>
+
+<!-- ROOMS -->
+<div id="room-zikr" class="room" style="background:linear-gradient(180deg,#030c1a,#050a14)">
+  <div class="z-band"></div>
+  <div class="room-topbar">
+    <button class="back-btn" onclick="closeRoom('zikr')">← Courtyard</button>
+    <div class="room-title-block">
+      <span class="rtitle-ar" style="color:#7ad8ff;text-shadow:0 0 20px #7ad8ff">الذِّكر</span>
+      <span class="rtitle-en" style="color:#50b0e0">Chamber of Zikr</span>
+      <span class="rday-lbl" id="zikr-day-lbl" style="color:#7ad8ff"></span>
+    </div>
+    <div style="width:120px"></div>
+  </div>
+  <div class="room-content">
+    <div class="fsec"><div class="fsec-title" style="color:#7ad8ff">Daily Remembrance</div><div class="zikr-grid" id="zikr-grid"></div></div>
+    <div class="fsec"><div class="fsec-title" style="color:#7ad8ff">Custom Zikr</div><div id="custom-zikr-area" style="display:flex;flex-direction:column;gap:12px"></div></div>
+  </div>
+</div>
+
+<div id="room-quran" class="room" style="background:linear-gradient(180deg,#030f06,#040b04)">
+  <div class="z-band"></div>
+  <div class="room-topbar">
+    <button class="back-btn" onclick="closeRoom('quran')">← Courtyard</button>
+    <div class="room-title-block">
+      <span class="rtitle-ar" style="color:#80ffaa;text-shadow:0 0 20px #80ffaa">القُرآن</span>
+      <span class="rtitle-en" style="color:#50d070">Chamber of Quran</span>
+      <span class="rday-lbl" id="quran-day-lbl" style="color:#80ffaa"></span>
+    </div>
+    <div style="width:120px"></div>
+  </div>
+  <div class="room-content">
+    <div class="fsec"><div class="fsec-title" style="color:#80ffaa">Today's Recitation</div>
+      <div class="input-row">
+        <div><label class="flabel" style="color:#50d070">Pages Read</label><input class="big-input" type="number" min="0" placeholder="0" id="quran-pages" oninput="saveField('quranPages',this.value)"/></div>
+        <div><label class="flabel" style="color:#50d070">Juz Number</label><input class="big-input" type="number" min="1" max="30" placeholder="1" id="quran-juz" oninput="saveField('quranJuz',this.value)"/></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="room-surahs" class="room" style="background:linear-gradient(180deg,#100408,#0a0306)">
+  <div class="z-band"></div>
+  <div class="room-topbar">
+    <button class="back-btn" onclick="closeRoom('surahs')">← Courtyard</button>
+    <div class="room-title-block">
+      <span class="rtitle-ar" style="color:#ffb8a8;text-shadow:0 0 20px #ffb8a8">السُّوَر المَتلُوَّة</span>
+      <span class="rtitle-en" style="color:#e08878">Surahs Recited</span>
+      <span class="rday-lbl" id="surahs-day-lbl" style="color:#ffb8a8"></span>
+    </div>
+    <div style="width:120px"></div>
+  </div>
+  <div class="room-content">
+    <div class="fsec"><div class="fsec-title" style="color:#ffb8a8">Which Surahs did you recite?</div>
+      <textarea class="big-input" rows="8" placeholder="e.g. Al-Fatiha, Al-Baqarah 1–5, Al-Mulk..." id="surahs-recited" oninput="saveField('surahsRecited',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div id="room-memorize" class="room" style="background:linear-gradient(180deg,#080414,#05020c)">
+  <div class="z-band"></div>
+  <div class="room-topbar">
+    <button class="back-btn" onclick="closeRoom('memorize')">← Courtyard</button>
+    <div class="room-title-block">
+      <span class="rtitle-ar" style="color:#c8b0ff;text-shadow:0 0 20px #c8b0ff">الحِفظ</span>
+      <span class="rtitle-en" style="color:#9878e0">Memorization</span>
+      <span class="rday-lbl" id="memo-day-lbl" style="color:#c8b0ff"></span>
+    </div>
+    <div style="width:120px"></div>
+  </div>
+  <div class="room-content">
+    <div class="fsec"><div class="fsec-title" style="color:#c8b0ff">Surahs Memorizing / Learned</div>
+      <textarea class="big-input" rows="8" placeholder="e.g. Al-Mulk (reviewing v1–10), Al-Kahf v1–5 (new)..." id="surahs-memorizing" oninput="saveField('surahsMemorizing',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<div id="room-names" class="room" style="background:linear-gradient(180deg,#020c0c,#010808)">
+  <div class="z-band"></div>
+  <div class="room-topbar">
+    <button class="back-btn" onclick="closeRoom('names')">← Courtyard</button>
+    <div class="room-title-block">
+      <span class="rtitle-ar" style="color:#80ffff;text-shadow:0 0 20px #80ffff">أسماء الله الحُسنى</span>
+      <span class="rtitle-en" style="color:#50d0d0">The Beautiful Names of Allah</span>
+      <span class="rday-lbl" id="names-day-lbl" style="color:#80ffff"></span>
+    </div>
+    <div style="width:120px"></div>
+  </div>
+  <div class="room-content">
+    <div class="fsec"><div class="fsec-title" style="color:#80ffff">Names Learned Today</div>
+      <textarea class="big-input" rows="8" placeholder="e.g. Ar-Rahman (The Most Gracious), Ar-Raheem (The Most Merciful)..." id="names-allah" oninput="saveField('namesOfAllah',this.value)"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───
+const DOORS=[
+  {id:'zikr',  ar:'الذِّكر',  en:'Zikr',
+   zelC1:'#0f2a50',zelC2:'#1a5a9a',zelC3:'#3a9ad0',zelAcc:'#f5c842',
+   panC1:'#162850',panC2:'#0a1830',panStr:'#3a7ab0',panKnk:'#3a8aba',
+   glow:'rgba(26,90,154,.95)',glowD:'rgba(10,40,80,.5)'},
+  {id:'quran', ar:'القُرآن',  en:'Quran',
+   zelC1:'#0a2015',zelC2:'#1a5a30',zelC3:'#2aaa60',zelAcc:'#f5c842',
+   panC1:'#102818',panC2:'#081508',panStr:'#2a8a40',panKnk:'#2aaa50',
+   glow:'rgba(26,90,48,.95)',glowD:'rgba(10,40,20,.5)'},
+  {id:'surahs',ar:'السُّوَر',  en:'Surahs Recited',
+   zelC1:'#200810',zelC2:'#6a1a28',zelC3:'#c05060',zelAcc:'#f5c842',
+   panC1:'#3a0e18',panC2:'#200810',panStr:'#a03040',panKnk:'#c04050',
+   glow:'rgba(139,34,60,.9)',glowD:'rgba(60,10,20,.5)'},
+  {id:'memorize',ar:'الحِفظ',en:'Memorization',
+   zelC1:'#100820',zelC2:'#3a1a70',zelC3:'#8060d0',zelAcc:'#f5c842',
+   panC1:'#200c40',panC2:'#100820',panStr:'#7050c0',panKnk:'#9070d0',
+   glow:'rgba(80,40,150,.9)',glowD:'rgba(30,10,60,.5)'},
+  {id:'names', ar:'أسماء الله',en:'Names of Allah',
+   zelC1:'#041818',zelC2:'#0a5858',zelC3:'#20c0c0',zelAcc:'#f5c842',
+   panC1:'#083030',panC2:'#041818',panStr:'#20a0a0',panKnk:'#30c0c0',
+   glow:'rgba(13,115,115,.9)',glowD:'rgba(4,44,44,.5)'},
+];
+
+// Build doors HTML
+function buildDoor(d){
+  const pid=`p${d.id}`;
+  return`<div class="door-wrap" id="door-${d.id}" onclick="openRoom('${d.id}')">
+  <div class="door-outer">
+    <svg class="door-svg" viewBox="0 0 164 290" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="zel-${d.id}" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="${d.zelC1}"/>
+          <polygon points="10,1 13,7 19,7 14,11 16,18 10,14 4,18 6,11 1,7 7,7" fill="${d.zelC2}" stroke="${d.zelAcc}" stroke-width=".45"/>
+          <polygon points="10,5 12,9 16,9 13,12 14,16 10,13 6,16 7,12 4,9 8,9" fill="${d.zelC1}" stroke="${d.zelC3}" stroke-width=".35"/>
+          <circle cx="10" cy="10" r="2.2" fill="${d.zelC3}" opacity=".75"/>
+          <line x1="0" y1="10" x2="20" y2="10" stroke="${d.zelAcc}" stroke-width=".15" opacity=".3"/>
+          <line x1="10" y1="0" x2="10" y2="20" stroke="${d.zelAcc}" stroke-width=".15" opacity=".3"/>
+        </pattern>
+        <clipPath id="aclip-${d.id}"><path d="M 32 285 L 32 120 Q 32 28 82 16 Q 132 28 132 120 L 132 285 Z"/></clipPath>
+        <linearGradient id="stuccoH-${d.id}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#5a3a10"/><stop offset="18%" stop-color="#c8a97a"/>
+          <stop offset="50%" stop-color="#e8d5b0"/><stop offset="82%" stop-color="#c8a97a"/>
+          <stop offset="100%" stop-color="#5a3a10"/>
+        </linearGradient>
+        <linearGradient id="stuccoV-${d.id}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e0c898"/><stop offset="40%" stop-color="#c8a97a"/>
+          <stop offset="100%" stop-color="#5a3a10"/>
+        </linearGradient>
+        <linearGradient id="panG-${d.id}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${d.panC1}"/><stop offset="100%" stop-color="${d.panC2}"/>
+        </linearGradient>
+      </defs>
+
+      <!-- ── CARVED STUCCO SIDE FRAMES ── -->
+      <rect x="0" y="58" width="32" height="232" fill="url(#stuccoV-${d.id})"/>
+      <rect x="132" y="58" width="32" height="232" fill="url(#stuccoV-${d.id})"/>
+      <!-- Carved horizontal grooves on left frame -->
+      <g stroke="#8a6030" stroke-width=".6" opacity=".55">
+        ${[70,82,94,106,130,150,170,190,210,230,250,270].map(y=>`<line x1="4" y1="${y}" x2="28" y2="${y}"/><line x1="136" y1="${y}" x2="160" y2="${y}"/>`).join('')}
+      </g>
+      <!-- Diamond rosettes on frames -->
+      <g fill="none" stroke="#c8a97a" stroke-width=".8" opacity=".45">
+        ${[120,165,210,255].map(y=>`<rect x="7" y="${y-9}" width="18" height="18" transform="rotate(45 16 ${y})"/>
+        <rect x="138" y="${y-9}" width="18" height="18" transform="rotate(45 147 ${y})"/>`).join('')}
+      </g>
+      <!-- Vertical gold inlay lines on frame -->
+      <line x1="3" y1="60" x2="3" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+      <line x1="29" y1="60" x2="29" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+      <line x1="135" y1="60" x2="135" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+      <line x1="161" y1="60" x2="161" y2="288" stroke="#c8a97a" stroke-width=".8" opacity=".5"/>
+
+      <!-- ── TOP ENTABLATURE ── -->
+      <rect x="0" y="18" width="164" height="42" fill="url(#stuccoH-${d.id})"/>
+      <!-- Carved wave pattern on top entablature -->
+      <g fill="none" stroke="#8a6030" stroke-width=".8" opacity=".65">
+        <path d="M 6 28 Q 16 20 26 28 Q 36 20 46 28 Q 56 20 66 28 Q 76 20 86 28 Q 96 20 106 28 Q 116 20 126 28 Q 136 20 146 28 Q 156 20 164 28"/>
+        <path d="M 6 40 Q 16 32 26 40 Q 36 32 46 40 Q 56 32 66 40 Q 76 32 86 40 Q 96 32 106 40 Q 116 32 126 40 Q 136 32 146 40 Q 156 32 164 40"/>
+        <path d="M 6 52 Q 16 44 26 52 Q 36 44 46 52 Q 56 44 66 52 Q 76 44 86 52 Q 96 44 106 52 Q 116 44 126 52 Q 136 44 146 52 Q 156 44 164 52"/>
+      </g>
+      <!-- Interlace dots on entablature -->
+      <g fill="#c8a97a" opacity=".4">
+        ${[26,46,66,86,106,126,146].map(x=>`<circle cx="${x}" cy="34" r="2"/>`).join('')}
+      </g>
+
+      <!-- ── SLENDER ALHAMBRA COLUMNS ── -->
+      <!-- Left column base -->
+      <ellipse cx="29" cy="289" rx="10" ry="3" fill="#c8a97a" opacity=".7"/>
+      <!-- Left column shaft (slender, rounded) -->
+      <rect x="24" y="155" width="10" height="134" rx="5" fill="url(#stuccoV-${d.id})" stroke="#c8a97a" stroke-width=".7"/>
+      <rect x="26" y="155" width="6" height="134" rx="3" fill="rgba(255,255,255,.1)"/>
+      <!-- Left column capital (muqarnas capital) -->
+      <path d="M 18 157 L 18 152 Q 29 138 40 152 L 40 157 Z" fill="#c8a97a" stroke="#f5c842" stroke-width=".8"/>
+      <path d="M 20 151 Q 29 142 38 151" fill="none" stroke="#f5c842" stroke-width=".7"/>
+      <path d="M 22 148 Q 29 140 36 148" fill="none" stroke="#e8d5b0" stroke-width=".5" opacity=".6"/>
+      <!-- Right column base -->
+      <ellipse cx="135" cy="289" rx="10" ry="3" fill="#c8a97a" opacity=".7"/>
+      <!-- Right column shaft -->
+      <rect x="130" y="155" width="10" height="134" rx="5" fill="url(#stuccoV-${d.id})" stroke="#c8a97a" stroke-width=".7"/>
+      <rect x="132" y="155" width="6" height="134" rx="3" fill="rgba(255,255,255,.1)"/>
+      <!-- Right column capital -->
+      <path d="M 124 157 L 124 152 Q 135 138 146 152 L 146 157 Z" fill="#c8a97a" stroke="#f5c842" stroke-width=".8"/>
+      <path d="M 126 151 Q 135 142 144 151" fill="none" stroke="#f5c842" stroke-width=".7"/>
+      <path d="M 128 148 Q 135 140 142 148" fill="none" stroke="#e8d5b0" stroke-width=".5" opacity=".6"/>
+
+      <!-- ── ZELLIGE TILE FILL inside pointed arch ── -->
+      <rect x="32" y="120" width="100" height="165" fill="url(#zel-${d.id})" clip-path="url(#aclip-${d.id})"/>
+
+      <!-- ── POINTED HORSESHOE ARCH (Moroccan/Andalusian) ── -->
+      <!-- Outer carved stucco arch band -->
+      <path d="M 22 285 L 22 122 Q 22 18 82 6 Q 142 18 142 122 L 142 285" fill="none" stroke="#7a5020" stroke-width="1.2" opacity=".8"/>
+      <!-- Main arch gold border -->
+      <path d="M 32 285 L 32 120 Q 32 28 82 16 Q 132 28 132 120 L 132 285" fill="none" stroke="#f5c842" stroke-width="2.8"/>
+      <!-- Inner arch highlight -->
+      <path d="M 36 285 L 36 123 Q 36 35 82 24 Q 128 35 128 123 L 128 285" fill="none" stroke="#e8d5b0" stroke-width="1.2" opacity=".6"/>
+      <!-- Innermost shadow line -->
+      <path d="M 40 285 L 40 126 Q 40 42 82 32 Q 124 42 124 126 L 124 285" fill="none" stroke="#c8a97a" stroke-width=".7" opacity=".4"/>
+
+      <!-- ── MUQARNAS STALACTITES at arch crown ── -->
+      <!-- Background fill for muqarnas region -->
+      <path d="M 32 120 Q 32 28 82 16 Q 132 28 132 120 L 128 120 Q 128 34 82 22 Q 36 34 36 120 Z" fill="url(#stuccoH-${d.id})" opacity=".9"/>
+      <!-- Muqarnas tier 1 (outermost) -->
+      <g fill="#c8a97a" stroke="#8a6030" stroke-width=".7">
+        <path d="M 32 119 Q 40 107 48 114 Q 56 102 64 111 Q 72 98 82 106 Q 92 98 100 111 Q 108 102 116 114 Q 124 107 132 119"/>
+      </g>
+      <!-- Muqarnas tier 2 (inner) -->
+      <g fill="#d8b98a" stroke="#c8a97a" stroke-width=".6">
+        <path d="M 36 119 Q 42 110 48 116 Q 54 107 60 114 Q 66 105 72 111 Q 78 103 82 108 Q 86 103 92 111 Q 98 105 104 114 Q 110 107 116 116 Q 122 110 128 119"/>
+      </g>
+      <!-- Muqarnas tier 3 (innermost) -->
+      <g fill="#e8d5b0" stroke="#c8a97a" stroke-width=".5" opacity=".8">
+        <path d="M 40 119 Q 45 112 50 117 Q 55 110 60 116 Q 65 108 70 114 Q 75 107 82 112 Q 89 107 94 114 Q 99 108 104 116 Q 109 110 114 117 Q 119 112 124 119"/>
+      </g>
+      <!-- Gold highlights on muqarnas tips -->
+      <g fill="#f5c842" opacity=".7">
+        <circle cx="48" cy="113" r="1.5"/><circle cx="64" cy="110" r="1.5"/>
+        <circle cx="82" cy="105" r="2"/><circle cx="100" cy="110" r="1.5"/>
+        <circle cx="116" cy="113" r="1.5"/>
+      </g>
+
+      <!-- ── STAR ROSETTE at arch apex ── -->
+      <circle cx="82" cy="14" r="10" fill="#3a2008" stroke="#c8a97a" stroke-width="1"/>
+      <polygon points="82,5 84.5,11 91,11 86,15 88,21 82,17 76,21 78,15 73,11 79.5,11" fill="#f5c842" stroke="#e8d5b0" stroke-width=".5"/>
+      <circle cx="82" cy="14" r="4" fill="none" stroke="#f5c842" stroke-width=".8"/>
+      <circle cx="82" cy="14" r="1.5" fill="#f5c842"/>
+
+      <!-- ── THRESHOLD BASE ── -->
+      <rect x="30" y="281" width="104" height="9" fill="url(#stuccoH-${d.id})" stroke="#c8a97a" stroke-width=".8"/>
+      <rect x="30" y="287" width="104" height="2" fill="#f5c842" opacity=".5"/>
+      <rect x="30" y="281" width="104" height="2" fill="#e8d5b0" opacity=".4"/>
+      <!-- Threshold tile pattern -->
+      <g fill="none" stroke="${d.zelAcc}" stroke-width=".4" opacity=".3">
+        ${[38,46,54,62,70,78,86,94,102,110,118,126].map(x=>`<line x1="${x}" y1="281" x2="${x}" y2="290"/>`).join('')}
+      </g>
+    </svg>
+
+    <!-- Glow behind open door -->
+    <div class="door-glow" style="background:radial-gradient(ellipse,${d.glow},${d.glowD},transparent)"></div>
+
+    <!-- 3D door panels -->
+    <div class="door-panels-3d">
+      <div class="dp3">
+        <svg class="dp3-face" viewBox="0 0 48 175" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="175" fill="url(#panG-${d.id})"/>
+          <!-- Carved top arch on panel face -->
+          <path d="M 4 28 Q 24 4 44 28" fill="none" stroke="${d.panStr}" stroke-width="1.2"/>
+          <path d="M 8 33 Q 24 12 40 33" fill="none" stroke="${d.panStr}" stroke-width=".7" opacity=".6"/>
+          <!-- Upper geometric star -->
+          <polygon points="24,50 26,58 34,58 28,63 30,71 24,66 18,71 20,63 14,58 22,58" fill="none" stroke="${d.panKnk}" stroke-width="1.1"/>
+          <circle cx="24" cy="60" r="3.5" fill="none" stroke="${d.panKnk}" stroke-width=".8"/>
+          <circle cx="24" cy="60" r="1.2" fill="${d.panKnk}" opacity=".6"/>
+          <!-- Horizontal panel rails -->
+          <rect x="6" y="82" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+          <rect x="6" y="90" width="36" height="1" fill="${d.panStr}" opacity=".35"/>
+          <rect x="6" y="112" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+          <!-- Lower geometric rosette -->
+          <polygon points="24,128 26,134 32,134 27,138 29,144 24,140 19,144 21,138 16,134 22,134" fill="none" stroke="${d.panStr}" stroke-width=".9"/>
+          <!-- Vertical center line -->
+          <line x1="24" y1="75" x2="24" y2="120" stroke="${d.panStr}" stroke-width=".5" opacity=".4"/>
+          <!-- Gold ring knocker -->
+          <circle cx="24" cy="158" r="8" fill="none" stroke="#f5c842" stroke-width="1.8"/>
+          <circle cx="24" cy="158" r="4" fill="none" stroke="#c8a97a" stroke-width="1"/>
+          <circle cx="24" cy="158" r="1.8" fill="#f5c842" opacity=".8"/>
+        </svg>
+      </div>
+      <div class="dp3 rp">
+        <svg class="dp3-face" viewBox="0 0 48 175" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="175" fill="url(#panG-${d.id})"/>
+          <path d="M 4 28 Q 24 4 44 28" fill="none" stroke="${d.panStr}" stroke-width="1.2"/>
+          <path d="M 8 33 Q 24 12 40 33" fill="none" stroke="${d.panStr}" stroke-width=".7" opacity=".6"/>
+          <polygon points="24,50 26,58 34,58 28,63 30,71 24,66 18,71 20,63 14,58 22,58" fill="none" stroke="${d.panKnk}" stroke-width="1.1"/>
+          <circle cx="24" cy="60" r="3.5" fill="none" stroke="${d.panKnk}" stroke-width=".8"/>
+          <circle cx="24" cy="60" r="1.2" fill="${d.panKnk}" opacity=".6"/>
+          <rect x="6" y="82" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+          <rect x="6" y="90" width="36" height="1" fill="${d.panStr}" opacity=".35"/>
+          <rect x="6" y="112" width="36" height="1.5" fill="${d.panStr}" opacity=".55"/>
+          <polygon points="24,128 26,134 32,134 27,138 29,144 24,140 19,144 21,138 16,134 22,134" fill="none" stroke="${d.panStr}" stroke-width=".9"/>
+          <line x1="24" y1="75" x2="24" y2="120" stroke="${d.panStr}" stroke-width=".5" opacity=".4"/>
+          <circle cx="24" cy="158" r="8" fill="none" stroke="#f5c842" stroke-width="1.8"/>
+          <circle cx="24" cy="158" r="4" fill="none" stroke="#c8a97a" stroke-width="1"/>
+          <circle cx="24" cy="158" r="1.8" fill="#f5c842" opacity=".8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <span class="door-ar-label">${d.ar}</span>
+  <span class="door-en-label">${d.en}</span>
+</div>`;
+}
+
+document.getElementById('doors-grid').innerHTML = DOORS.map(buildDoor).join('');
+
+// ─── STATE ───
+const RAMADAN_START=new Date(2026,1,19);
+const TOTAL_DAYS=30;
+const USERS=['Yusra','Zaminah'];
+const PRESET_ZIKR=[
+  {key:'SubhanAllah',ar:'سُبحانَ الله',en:'SubhanAllah'},
+  {key:'Alhamdulillah',ar:'الحَمدُ لله',en:'Alhamdulillah'},
+  {key:'AllahuAkbar',ar:'اللهُ أكبَر',en:'Allahu Akbar'},
+  {key:'Astaghfirullah',ar:'أستَغفِرُ الله',en:'Astaghfirullah'},
+];
+const today=new Date(2026,1,20);
+function getDayNum(d){const s=new Date(RAMADAN_START);s.setHours(0,0,0,0);const t=new Date(d);t.setHours(0,0,0,0);return Math.floor((t-s)/86400000)+1;}
+function getDayDate(n){const d=new Date(RAMADAN_START);d.setDate(d.getDate()+n-1);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+const todayNum=getDayNum(today);
+let currentUser='Yusra',currentDay=todayNum;
+let allData={};
+try{allData=JSON.parse(localStorage.getItem('rm2026v3')||'{}');}catch(e){}
+function emptyDay(){return{zikr:Object.fromEntries(PRESET_ZIKR.map(z=>[z.key,''])),customZikr:[{name:'',count:''},{name:'',count:''}],quranPages:'',quranJuz:'',surahsRecited:'',surahsMemorizing:'',namesOfAllah:''};}
+function getDay(u,d){return allData?.[u]?.[d]?JSON.parse(JSON.stringify(allData[u][d])):emptyDay();}
+function ensureDay(){if(!allData[currentUser])allData[currentUser]={};if(!allData[currentUser][currentDay])allData[currentUser][currentDay]=emptyDay();}
+function saveField(f,v){ensureDay();allData[currentUser][currentDay][f]=v;persist();updateProgress();}
+function saveZikr(k,v){ensureDay();allData[currentUser][currentDay].zikr[k]=v;persist();updateProgress();}
+function saveCustom(i,k,v){ensureDay();const cz=allData[currentUser][currentDay].customZikr||[{name:'',count:''},{name:'',count:''}];cz[i]={...cz[i],[k]:v};allData[currentUser][currentDay].customZikr=cz;persist();}
+function persist(){try{localStorage.setItem('rm2026v3',JSON.stringify(allData));}catch(e){}}
+function setUser(u){currentUser=u;document.querySelectorAll('.user-pill').forEach(b=>b.classList.toggle('active',b.textContent.trim()===u));updateProgress();refreshDays();}
+function calcProgress(u){let f=0,t=0;for(let d=1;d<=todayNum;d++){const day=getDay(u,d);PRESET_ZIKR.forEach(z=>{t++;if(day.zikr[z.key])f++;});t++;if(day.quranPages)f++;t++;if(day.namesOfAllah)f++;}return t===0?0:Math.round(f/t*100);}
+function updateProgress(){USERS.forEach(u=>{const p=calcProgress(u),k=u.toLowerCase();const ef=document.getElementById('prog-'+k),ep=document.getElementById('pct-'+k);if(ef)ef.style.width=p+'%';if(ep)ep.textContent=p+'%';});}
+function refreshDays(){const strip=document.getElementById('day-strip');strip.innerHTML='';for(let d=1;d<=TOTAL_DAYS;d++){const b=document.createElement('button');b.className='dp'+(d===currentDay?' selected':(d===todayNum?' today':''))+(d>todayNum?' future':'');b.innerHTML='<div>'+getDayDate(d)+'</div><div style="font-weight:600">'+d+'</div>';if(d<=todayNum)b.onclick=(()=>{const dd=d;return()=>selectDay(dd)})();strip.appendChild(b);}}
+function selectDay(d){currentDay=d;refreshDays();const or=document.querySelector('.room.active');if(or)populateRoom(or.id.replace('room-',''));}
+function openRoom(id){const door=document.getElementById('door-'+id);door.classList.add('open');setTimeout(()=>{document.getElementById('courtyard').style.display='none';document.getElementById('room-'+id).classList.add('active');populateRoom(id);window.scrollTo(0,0);},820);}
+function closeRoom(id){document.getElementById('room-'+id).classList.remove('active');document.getElementById('courtyard').style.display='flex';setTimeout(()=>document.getElementById('door-'+id).classList.remove('open'),100);window.scrollTo(0,0);}
+function dayLabel(){return'Day '+currentDay+' · '+getDayDate(currentDay)+' · '+currentUser;}
+function populateRoom(id){
+  const d=getDay(currentUser,currentDay);
+  if(id==='zikr'){
+    document.getElementById('zikr-day-lbl').textContent=dayLabel();
+    const grid=document.getElementById('zikr-grid');grid.innerHTML='';
+    PRESET_ZIKR.forEach(z=>{const c=document.createElement('div');c.className='zcard';c.style.background='rgba(26,58,122,.18)';
+      c.innerHTML=`<span class="zar" style="color:#a8e0ff">${z.ar}</span><span class="zen" style="color:#6090b8">${z.en}</span><input class="zinput" type="number" min="0" placeholder="0" value="${d.zikr[z.key]||''}" oninput="saveZikr('${z.key}',this.value)"/>`;grid.appendChild(c);});
+    const area=document.getElementById('custom-zikr-area');area.innerHTML='';
+    const cz=d.customZikr||[{name:'',count:''},{name:'',count:''}];
+    [0,1].forEach(i=>{const r=document.createElement('div');r.className='czwrap';r.innerHTML=`<input class="big-input" style="flex:1" placeholder="Your zikr name..." value="${cz[i]?.name||''}" oninput="saveCustom(${i},'name',this.value)"/><input class="big-input" style="width:100px;flex-shrink:0" type="number" min="0" placeholder="0" value="${cz[i]?.count||''}" oninput="saveCustom(${i},'count',this.value)"/>`;area.appendChild(r);});
+  }
+  if(id==='quran'){document.getElementById('quran-day-lbl').textContent=dayLabel();document.getElementById('quran-pages').value=d.quranPages||'';document.getElementById('quran-juz').value=d.quranJuz||'';}
+  if(id==='surahs'){document.getElementById('surahs-day-lbl').textContent=dayLabel();document.getElementById('surahs-recited').value=d.surahsRecited||'';}
+  if(id==='memorize'){document.getElementById('memo-day-lbl').textContent=dayLabel();document.getElementById('surahs-memorizing').value=d.surahsMemorizing||'';}
+  if(id==='names'){document.getElementById('names-day-lbl').textContent=dayLabel();document.getElementById('names-allah').value=d.namesOfAllah||'';}
+}
+updateProgress();refreshDays();
+['✦','✧','⋆','·','✵'].forEach((s,i)=>{const el=document.createElement('div');el.className='float-star';el.textContent=s;el.style.cssText=`left:${8+i*18}vw;animation-duration:${14+i*3}s;animation-delay:${i*2.5}s;font-size:${7+i%3*5}px;color:#f5c842`;document.body.appendChild(el);});
+</script>
+</body>
 </html>
