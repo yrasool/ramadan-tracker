@@ -6,6 +6,7 @@ const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
 const USER_RECORD_KEYS = { Yusra: "yusra", Zaminah: "zaminah" };
+const MAX_SECTION_HEIGHT = 2000;
 const PRESET_ZIKR = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "Astaghfirullah"];
 
 const today = new Date();
@@ -143,6 +144,7 @@ export default function App() {
   const [viewUser, setViewUser] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveTimer, setSaveTimer] = useState(null);
+  const userDayData = user ? getUserData(allData, user)?.[selectedDay] : null;
 
   // Live sync from Firebase
   useEffect(() => {
@@ -157,10 +159,10 @@ export default function App() {
   // When selecting a day, load into local state for editing
   useEffect(() => {
     if (user) {
-      const d = getUserData(allData, user)?.[selectedDay] || emptyDayData();
+      const d = userDayData || emptyDayData();
       setLocalDay(JSON.parse(JSON.stringify(d)));
     }
-  }, [selectedDay, user, allData]);
+  }, [selectedDay, user, userDayData]);
 
   // Debounced save to Firebase
   function handleChange(newData) {
@@ -331,7 +333,7 @@ const s = {
   doorLeftOpen: { transform: "rotateY(-100deg)" },
   doorRightOpen: { transform: "rotateY(100deg)" },
   sectionBody: { maxHeight: 0, opacity: 0, overflow: "hidden", transition: "max-height .45s ease, opacity .35s ease, padding .35s ease", background: "rgba(12,22,16,.72)", borderRadius: 10, padding: "0 12px" },
-  sectionBodyOpen: { maxHeight: 600, opacity: 1, padding: "12px" },
+  sectionBodyOpen: { maxHeight: MAX_SECTION_HEIGHT, opacity: 1, padding: "12px" },
   zikrGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: 12 },
   zikrItem: { display: "flex", flexDirection: "column", gap: 4 },
   zikrLabel: { fontSize: 12, color: "#7eb89a" },
