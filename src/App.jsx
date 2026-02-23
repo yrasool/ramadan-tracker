@@ -239,6 +239,10 @@ export default function App() {
   const [transitionPhase, setTransitionPhase] = useState("idle");
 
   const saveTimer = useRef(null);
+  const userKey = USER_RECORD_KEYS[user] || user?.toLowerCase();
+  const latestDayRef = useRef(localDay);
+  const latestUserKeyRef = useRef(userKey);
+  const latestSelectedDayRef = useRef(selectedDay);
 
   useEffect(() => {
     if (!db) return;
@@ -257,14 +261,30 @@ export default function App() {
 
   useEffect(() => {
     return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        if (db && latestUserKeyRef.current && latestSelectedDayRef.current) {
+          set(
+            ref(db, `tracker/${latestUserKeyRef.current}/${latestSelectedDayRef.current}`),
+            latestDayRef.current,
+          );
+        }
+      }
     };
   }, []);
 
-  const userKey = USER_RECORD_KEYS[user] || user?.toLowerCase();
+  useEffect(() => {
+    latestDayRef.current = localDay;
+  }, [localDay]);
+
+  useEffect(() => {
+    latestUserKeyRef.current = userKey;
+    latestSelectedDayRef.current = selectedDay;
+  }, [userKey, selectedDay]);
 
   function persistDay(nextData) {
     setLocalDay(nextData);
+    latestDayRef.current = nextData;
     setAllData(prev => {
       const next = { ...prev };
       const userBucket = { ...(next[userKey] || {}) };
@@ -278,6 +298,7 @@ export default function App() {
     setSaving(true);
     saveTimer.current = setTimeout(async () => {
       await set(ref(db, `tracker/${userKey}/${selectedDay}`), nextData);
+      saveTimer.current = null;
       setSaving(false);
     }, 800);
   }
