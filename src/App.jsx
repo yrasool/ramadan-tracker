@@ -38,19 +38,19 @@ const DOORS = [
 ];
 
 const ROOM_IMAGES = {
-  zikr: new URL("./download (1).jpg", import.meta.url).href,
-  quran: new URL("./download (2).jpg", import.meta.url).href,
-  surahs: new URL("./download (3).jpg", import.meta.url).href,
-  memorize: new URL("./download (4).jpg", import.meta.url).href,
-  names: new URL("./download.jpg", import.meta.url).href,
+  zikr: new URL("./zikr.jpg", import.meta.url).href,
+  quran: new URL("./Quran.jpg", import.meta.url).href,
+  surahs: new URL("./surah.jpg", import.meta.url).href,
+  memorize: new URL("./memorize.jpg", import.meta.url).href,
+  names: new URL("./names.jpg", import.meta.url).href,
 };
 
 const ROOM_BACKGROUNDS = {
-  zikr: `linear-gradient(180deg, rgba(3,12,26,0.9), rgba(5,10,20,0.95)), url(${ROOM_IMAGES.zikr})`,
-  quran: `linear-gradient(180deg, rgba(3,15,6,0.9), rgba(4,11,4,0.95)), url(${ROOM_IMAGES.quran})`,
-  surahs: `linear-gradient(180deg, rgba(16,4,8,0.9), rgba(10,3,6,0.95)), url(${ROOM_IMAGES.surahs})`,
-  memorize: `linear-gradient(180deg, rgba(8,4,20,0.9), rgba(5,2,12,0.95)), url(${ROOM_IMAGES.memorize})`,
-  names: `linear-gradient(180deg, rgba(2,12,12,0.9), rgba(1,8,8,0.95)), url(${ROOM_IMAGES.names})`,
+  zikr: `linear-gradient(180deg, rgba(5,15,35,0.92) 0%, rgba(8,18,45,0.97) 100%), url(${ROOM_IMAGES.zikr})`,
+  quran: `linear-gradient(180deg, rgba(4,18,8,0.92) 0%, rgba(5,14,6,0.97) 100%), url(${ROOM_IMAGES.quran})`,
+  surahs: `linear-gradient(180deg, rgba(20,4,10,0.92) 0%, rgba(14,3,8,0.97) 100%), url(${ROOM_IMAGES.surahs})`,
+  memorize: `linear-gradient(180deg, rgba(10,5,25,0.92) 0%, rgba(7,3,18,0.97) 100%), url(${ROOM_IMAGES.memorize})`,
+  names: `linear-gradient(180deg, rgba(2,14,14,0.92) 0%, rgba(2,10,10,0.97) 100%), url(${ROOM_IMAGES.names})`,
 };
 
 const FLOATING_STARS = [
@@ -76,10 +76,12 @@ function getDayDate(dayNum) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+const CUSTOM_ZIKR_DEFAULT = [{ name: "", count: "" }, { name: "", count: "" }];
+
 function emptyDayData() {
   return {
     zikr: PRESET_ZIKR.reduce((a, z) => ({ ...a, [z.key]: "" }), {}),
-    customZikr: [{ name: "", count: "" }, { name: "", count: "" }],
+    customZikr: [...CUSTOM_ZIKR_DEFAULT],
     quranPages: "",
     quranJuz: "",
     surahsRecited: "",
@@ -287,7 +289,7 @@ export default function App() {
   }
 
   function saveCustom(index, key, value) {
-    const custom = [...(localDay.customZikr || [{ name: "", count: "" }, { name: "", count: "" }])];
+    const custom = [...(localDay.customZikr || CUSTOM_ZIKR_DEFAULT)];
     custom[index] = { ...custom[index], [key]: value };
     persistDay({ ...localDay, customZikr: custom });
   }
@@ -350,7 +352,7 @@ export default function App() {
   return (
     <>
       <style>{`\n@import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap');\n:root{--sand:#c8a97a;--sand-dark:#8a6a3a;--sand-pale:#e8d5b0;--gold:#f5c842;--gold-dim:#c9a030;--ivory:#fdf6e3;--deep:#06090a;--text-bright:#fff8e8;}\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}\nbody{background:var(--deep);color:var(--text-bright);font-family:'Cormorant Garamond',serif;min-height:100vh;overflow-x:hidden;}\n.geo-bg{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.04;}\n.geo-bg svg{width:100%;height:100%;}\n.z-band{width:100%;height:20px;background:repeating-linear-gradient(90deg,#1a5a8a 0,#1a5a8a 16px,#f5c842 16px,#f5c842 18px,#8b2230 18px,#8b2230 34px,#f5c842 34px,#f5c842 36px,#1e8080 36px,#1e8080 52px,#f5c842 52px,#f5c842 54px,#c8a97a 54px,#c8a97a 70px,#f5c842 70px,#f5c842 72px,#fff8e8 72px,#fff8e8 88px,#f5c842 88px,#f5c842 90px);flex-shrink:0;}\n.courtyard{min-height:100vh;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;padding-bottom:80px;}\n.courtyard.hidden{display:none;}\n.courtyard-exit{animation:courtyardOut .6s ease forwards;}\n.courtyard-enter{animation:courtyardIn .6s ease forwards;}\n@keyframes courtyardOut{from{opacity:1;transform:scale(1);filter:blur(0);}to{opacity:0;transform:scale(1.03);filter:blur(6px);}}\n@keyframes courtyardIn{from{opacity:0;transform:scale(1.02);filter:blur(6px);}to{opacity:1;transform:scale(1);filter:blur(0);}}\n.header-arch-svg{width:min(760px,95%);margin:0 auto -10px;display:block;}\n.arabic-main{font-family:'Scheherazade New',serif;font-size:clamp(44px,8vw,82px);color:#fff8e8;text-align:center;display:block;text-shadow:0 0 20px #f5c842,0 0 60px rgba(245,200,66,.5),0 2px 0 #8a6020;animation:shimmer 4s ease-in-out infinite alternate;line-height:1.15;}\n@keyframes shimmer{0%{text-shadow:0 0 15px #f5c842,0 0 40px rgba(245,200,66,.4),0 2px 0 #8a6020;}100%{text-shadow:0 0 40px #f5c842,0 0 90px rgba(245,200,66,.7),0 0 130px rgba(245,200,66,.25),0 2px 0 #8a6020;}}\n.en-title{font-family:'Cinzel Decorative',serif;font-size:clamp(13px,2.2vw,22px);color:var(--gold);letter-spacing:7px;text-align:center;margin-top:6px;text-shadow:0 0 20px rgba(245,200,66,.6);}\n.sub-date{font-size:14px;color:#a0d0c8;letter-spacing:3px;text-align:center;margin-top:5px;}\n.divider{display:flex;align-items:center;gap:10px;margin:22px auto;width:min(420px,85%);}\n.dline{flex:1;height:1px;background:linear-gradient(90deg,transparent,#f5c842,transparent);}\n.dstar{color:#f5c842;font-size:16px;text-shadow:0 0 10px #f5c842;}\n.user-bar{display:flex;gap:0;margin:0 0 28px;border:1.5px solid var(--sand-dark);overflow:hidden;}\n.user-pill{padding:11px 34px;border:none;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:12px;letter-spacing:2px;background:rgba(8,13,16,.9);color:#6a8a7a;transition:all .3s;border-right:1px solid var(--sand-dark);}\n.user-pill:last-child{border-right:none;}\n.user-pill.active{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);text-shadow:0 0 12px rgba(245,200,66,.6);}\n.progress-row{display:flex;gap:28px;margin-bottom:32px;width:min(580px,88%);}\n.pc{flex:1;}\n.pc-name{font-family:'Scheherazade New',serif;font-size:22px;color:#fff8e8;display:flex;justify-content:space-between;margin-bottom:5px;}\n.pc-name span{font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold);}\n.pc-track{height:5px;background:#0e1a14;border:1px solid var(--sand-dark);overflow:hidden;}\n.pc-fill{height:100%;transition:width 1.2s ease;}\n.day-strip{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:720px;width:88%;margin-bottom:44px;}\n.dp{background:transparent;border:1px solid #1a2820;color:#3a6050;padding:4px 8px;font-size:10px;cursor:pointer;transition:all .15s;font-family:'Cormorant Garamond',serif;line-height:1.3;text-align:center;}\n.dp:hover{border-color:var(--gold-dim);color:var(--gold);}\n.dp.today{border-color:var(--sand-dark);color:var(--sand);}\n.dp.selected{background:linear-gradient(135deg,#2a1800,#4a2e08);color:var(--gold);border-color:var(--gold);}\n.dp.future{opacity:.2;cursor:default;}\n.enter-ar{font-family:'Scheherazade New',serif;font-size:32px;color:#fff8e8;text-align:center;margin-bottom:4px;text-shadow:0 0 20px rgba(245,200,66,.4);}\n.enter-en{font-family:'Cinzel Decorative',serif;font-size:9px;color:var(--sand-dark);letter-spacing:5px;text-align:center;margin-bottom:38px;}\n.doors-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:40px 28px;max-width:840px;width:88%;}\n.door-wrap{display:flex;flex-direction:column;align-items:center;cursor:pointer;}\n.door-outer{position:relative;width:164px;height:290px;filter:drop-shadow(0 12px 40px rgba(0,0,0,.9));transition:filter .35s;}\n.door-wrap:hover .door-outer{filter:drop-shadow(0 12px 50px rgba(0,0,0,.9)) drop-shadow(0 0 28px rgba(245,200,66,.3));}\n.door-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}\n.door-panels-3d{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;display:flex;gap:2px;perspective:700px;z-index:5;}\n.dp3{flex:1;height:100%;position:relative;transition:transform 1.15s cubic-bezier(.25,.46,.45,.94);transform-origin:left center;overflow:hidden;backface-visibility:hidden;}\n.dp3.rp{transform-origin:right center;}\n.dp3-face{width:100%;height:100%;}\n.door-wrap:not(.open):hover .dp3{transform:perspective(700px) rotateY(-14deg);}\n.door-wrap:not(.open):hover .dp3.rp{transform:perspective(700px) rotateY(14deg);}\n.door-wrap.open .dp3{transform:perspective(700px) rotateY(-118deg);}\n.door-wrap.open .dp3.rp{transform:perspective(700px) rotateY(118deg);}\n.door-glow{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:100px;height:175px;z-index:3;opacity:0;transition:opacity .7s .3s;}\n.door-wrap.open .door-glow{opacity:1;}\n.door-ar-label{font-family:'Scheherazade New',serif;font-size:24px;color:#fff8e8;text-align:center;margin-top:14px;text-shadow:0 0 20px rgba(245,200,66,.7),0 1px 0 #4a2e00;transition:all .3s;}\n.door-en-label{font-family:'Cinzel Decorative',serif;font-size:8px;color:var(--sand-dark);letter-spacing:2px;text-align:center;margin-top:2px;}\n.door-wrap:hover .door-ar-label{color:var(--gold);text-shadow:0 0 30px #f5c842,0 0 60px rgba(245,200,66,.4);}\n
-.room{display:none;min-height:100vh;flex-direction:column;z-index:10;animation:roomIn .85s cubic-bezier(.22,1,.36,1) forwards;}\n.room.active{display:flex;}\n.room-enter{animation:roomPushIn .7s cubic-bezier(.22,1,.36,1) forwards;}\n@keyframes roomIn{from{opacity:0;transform:translateY(28px) scale(.97);}to{opacity:1;transform:none;}}\n@keyframes roomPushIn{from{opacity:0;transform:scale(1.05) translateY(16px);filter:blur(6px);}to{opacity:1;transform:scale(1) translateY(0);filter:blur(0);}}\n.room-topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid rgba(200,169,122,.2);}\n.back-btn{background:transparent;border:1px solid var(--sand-dark);color:var(--gold);padding:10px 20px;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:2px;transition:all .2s;}\n.back-btn:hover{background:rgba(200,169,122,.1);border-color:var(--gold);}\n.room-title-block{text-align:center;flex:1;}\n.rtitle-ar{font-family:'Scheherazade New',serif;font-size:clamp(26px,4vw,44px);display:block;}\n.rtitle-en{font-family:'Cinzel Decorative',serif;font-size:clamp(9px,1.3vw,13px);letter-spacing:3px;display:block;margin-top:4px;opacity:.75;}\n.rday-lbl{font-size:12px;letter-spacing:2px;display:block;margin-top:4px;opacity:.6;}\n.room-content{flex:1;padding:36px 28px 70px;max-width:720px;margin:0 auto;width:100%;}\n.fsec{margin-bottom:36px;}\n.fsec-title{font-family:'Scheherazade New',serif;font-size:26px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}\n.fsec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,currentColor 0%,transparent 100%);opacity:.25;}\n.flabel{font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:block;opacity:.8;}\n.zikr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;}\n.zcard{border:1px solid rgba(255,255,255,.07);padding:16px 12px;position:relative;transition:border-color .2s;}\n.zcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}\n.zcard:focus-within{border-color:var(--sand-dark);}\n.zar{font-family:'Scheherazade New',serif;font-size:20px;display:block;margin-bottom:2px;}\n.zen{font-size:10px;opacity:.45;display:block;margin-bottom:10px;font-style:italic;}\n.zinput{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:10px;font-size:22px;font-family:'Cormorant Garamond',serif;text-align:center;width:100%;outline:none;transition:all .2s;}\n.zinput:focus{border-color:var(--gold-dim);box-shadow:0 0 12px rgba(245,200,66,.15);}\n.big-input{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);color:var(--text-bright);padding:16px;font-size:16px;font-family:'Cormorant Garamond',serif;width:100%;outline:none;transition:all .2s;line-height:1.7;}\n.big-input:focus{border-color:var(--gold-dim);box-shadow:0 0 18px rgba(245,200,66,.12);}\ntextarea.big-input{resize:vertical;}\n.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}\n.czwrap{display:flex;gap:10px;}\n.float-star{position:fixed;pointer-events:none;opacity:0;animation:starUp linear infinite;z-index:0;}\n@keyframes starUp{0%{opacity:0;transform:translateY(100vh);}8%{opacity:.45;}92%{opacity:.45;}100%{opacity:0;transform:translateY(-30px);}}\n`}</style>
+.room{display:none;min-height:100vh;flex-direction:column;z-index:10;animation:roomIn .85s cubic-bezier(.22,1,.36,1) forwards;}\n.room.active{display:flex;}\n.room-enter{animation:roomPushIn .7s cubic-bezier(.22,1,.36,1) forwards;}\n@keyframes roomIn{from{opacity:0;transform:translateY(28px) scale(.97);}to{opacity:1;transform:none;}}\n@keyframes roomPushIn{from{opacity:0;transform:scale(1.05) translateY(16px);filter:blur(6px);}to{opacity:1;transform:scale(1) translateY(0);filter:blur(0);}}\n.room-topbar{display:flex;align-items:center;padding:18px 28px;border-bottom:1px solid rgba(200,169,122,.2);position:relative;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);}\n.back-btn{background:transparent;border:1.5px solid var(--sand-dark);color:var(--gold);padding:9px 18px;cursor:pointer;font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:2px;transition:all .2s;flex-shrink:0;position:relative;z-index:1;}\n.back-btn:hover{background:rgba(200,169,122,.12);border-color:var(--gold);}\n.room-title-block{text-align:center;position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;}\n.rtitle-ar{font-family:'Scheherazade New',serif;font-size:clamp(28px,4.5vw,48px);display:block;color:var(--text-bright);text-shadow:0 0 18px rgba(245,200,66,.35);line-height:1.2;}\n.rtitle-en{font-family:'Cinzel Decorative',serif;font-size:clamp(9px,1.4vw,13px);letter-spacing:4px;display:block;margin-top:3px;color:var(--gold);opacity:.85;}\n.rday-lbl{font-size:11px;letter-spacing:2px;display:block;margin-top:3px;color:var(--sand);opacity:.7;}\n.room-content{flex:1;padding:40px 28px 80px;max-width:720px;margin:0 auto;width:100%;}\n.fsec{margin-bottom:40px;}\n.fsec-title{font-family:'Scheherazade New',serif;font-size:28px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:var(--text-bright);}\n.fsec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,currentColor 0%,transparent 100%);opacity:.2;}\n.flabel{font-family:'Cinzel Decorative',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:block;color:var(--sand);opacity:.85;}\n.zikr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;}\n.zcard{border:1px solid rgba(255,255,255,.08);padding:16px 12px;position:relative;transition:border-color .2s;background:rgba(0,0,0,.3);}\n.zcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}\n.zcard:focus-within{border-color:var(--sand-dark);}\n.zar{font-family:'Scheherazade New',serif;font-size:20px;display:block;margin-bottom:2px;}\n.zen{font-size:10px;opacity:.45;display:block;margin-bottom:10px;font-style:italic;}\n.zinput{background:rgba(0,0,0,.55);border:1.5px solid rgba(255,255,255,.1);color:var(--text-bright);padding:10px;font-size:24px;font-family:'Cormorant Garamond',serif;text-align:center;width:100%;outline:none;transition:all .2s;}\n.zinput:focus{border-color:var(--gold-dim);box-shadow:0 0 12px rgba(245,200,66,.18);}\n.big-input{background:rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.1);color:var(--text-bright);padding:18px;font-size:17px;font-family:'Cormorant Garamond',serif;width:100%;outline:none;transition:all .2s;line-height:1.75;}\n.big-input:focus{border-color:var(--gold-dim);box-shadow:0 0 18px rgba(245,200,66,.14);}\ntextarea.big-input{resize:vertical;min-height:120px;}\n.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}\n.czwrap{display:flex;gap:10px;}\n.saving-dot{position:fixed;top:8px;right:14px;font-family:'Cinzel Decorative',serif;font-size:8px;letter-spacing:2px;color:var(--gold);opacity:.75;z-index:100;}\n.float-star{position:fixed;pointer-events:none;opacity:0;animation:starUp linear infinite;z-index:0;}\n@keyframes starUp{0%{opacity:0;transform:translateY(100vh);}8%{opacity:.45;}92%{opacity:.45;}100%{opacity:0;transform:translateY(-30px);}}\n`}</style>
 
       <div className="geo-bg">
         <svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice">
@@ -494,11 +496,183 @@ export default function App() {
         </div>
       </div>
 
-      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>...</div>
-      <div id="room-quran" className={roomClass("quran")} style={roomStyle("quran")}>...</div>
-      <div id="room-surahs" className={roomClass("surahs")} style={roomStyle("surahs")}>...</div>
-      <div id="room-memorize" className={roomClass("memorize")} style={roomStyle("memorize")}>...</div>
-      <div id="room-names" className={roomClass("names")} style={roomStyle("names")}>...</div>
+      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>
+        <div className="z-band" />
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">الذِّكر</span>
+            <span className="rtitle-en">Zikr</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+        </div>
+        {saving && <div className="saving-dot">Saving…</div>}
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#3a9ad0" }}>الأذكار اليومية</div>
+            <div className="zikr-grid">
+              {PRESET_ZIKR.map(z => (
+                <div className="zcard" key={z.key} style={{ borderTopColor: "#3a9ad0" }}>
+                  <span className="zar">{z.ar}</span>
+                  <span className="zen">{z.en}</span>
+                  <input
+                    className="zinput"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={localDay.zikr?.[z.key] || ""}
+                    onChange={e => saveZikr(z.key, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#3a9ad0" }}>أذكار مخصصة</div>
+            {(localDay.customZikr || CUSTOM_ZIKR_DEFAULT).map((cz, i) => (
+              <div className="czwrap" key={i} style={{ marginBottom: 12 }}>
+                <input
+                  className="big-input"
+                  type="text"
+                  placeholder="Dhikr name…"
+                  value={cz.name}
+                  onChange={e => saveCustom(i, "name", e.target.value)}
+                  style={{ flex: 2 }}
+                />
+                <input
+                  className="big-input"
+                  type="number"
+                  min="0"
+                  placeholder="Count"
+                  value={cz.count}
+                  onChange={e => saveCustom(i, "count", e.target.value)}
+                  style={{ flex: 1 }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div id="room-quran" className={roomClass("quran")} style={roomStyle("quran")}>
+        <div className="z-band" />
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">القُرآن</span>
+            <span className="rtitle-en">Quran</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+        </div>
+        {saving && <div className="saving-dot">Saving…</div>}
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#2aaa60" }}>القراءة اليومية</div>
+            <div className="input-row">
+              <div>
+                <label className="flabel">Pages Read</label>
+                <input
+                  className="big-input"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={localDay.quranPages || ""}
+                  onChange={e => saveField("quranPages", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="flabel">Juz Completed</label>
+                <input
+                  className="big-input"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={localDay.quranJuz || ""}
+                  onChange={e => saveField("quranJuz", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="room-surahs" className={roomClass("surahs")} style={roomStyle("surahs")}>
+        <div className="z-band" />
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">السُّوَر</span>
+            <span className="rtitle-en">Surahs Recited</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+        </div>
+        {saving && <div className="saving-dot">Saving…</div>}
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#c05060" }}>السور المقروءة</div>
+            <label className="flabel">Surahs Recited Today</label>
+            <textarea
+              className="big-input"
+              rows={6}
+              placeholder="List the surahs you recited today…"
+              value={localDay.surahsRecited || ""}
+              onChange={e => saveField("surahsRecited", e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div id="room-memorize" className={roomClass("memorize")} style={roomStyle("memorize")}>
+        <div className="z-band" />
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">الحِفظ</span>
+            <span className="rtitle-en">Memorization</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+        </div>
+        {saving && <div className="saving-dot">Saving…</div>}
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#8060d0" }}>الحِفظ والمراجعة</div>
+            <label className="flabel">Surah Being Memorized</label>
+            <textarea
+              className="big-input"
+              rows={6}
+              placeholder="Note the surah or ayahs you are memorizing…"
+              value={localDay.surahsMemorizing || ""}
+              onChange={e => saveField("surahsMemorizing", e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div id="room-names" className={roomClass("names")} style={roomStyle("names")}>
+        <div className="z-band" />
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">أسماء الله</span>
+            <span className="rtitle-en">Names of Allah</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+        </div>
+        {saving && <div className="saving-dot">Saving…</div>}
+        <div className="room-content">
+          <div className="fsec">
+            <div className="fsec-title" style={{ color: "#20c0c0" }}>أسماء الله الحُسنى</div>
+            <label className="flabel">Names Learned Today</label>
+            <textarea
+              className="big-input"
+              rows={6}
+              placeholder="Write the names of Allah you reflected on today…"
+              value={localDay.namesOfAllah || ""}
+              onChange={e => saveField("namesOfAllah", e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
       {FLOATING_STARS.map((s, i) => (
         <div
           key={i}
