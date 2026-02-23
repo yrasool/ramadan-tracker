@@ -6,6 +6,8 @@ const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
 const USER_RECORD_KEYS = { Yusra: "yusra", Zaminah: "zaminah" };
+const CUSTOM_ZIKR_ROWS = 2;
+const SAVE_STATUS_STYLE = { fontSize: 11, color: "rgba(245,200,66,.85)", letterSpacing: 1.5 };
 
 const PRESET_ZIKR = [
   { key: "SubhanAllah", ar: "سُبحانَ الله", en: "SubhanAllah" },
@@ -37,20 +39,12 @@ const DOORS = [
     glow: "rgba(13,115,115,.9)", glowD: "rgba(4,44,44,.5)" },
 ];
 
-const ROOM_IMAGES = {
-  zikr: new URL("./download (1).jpg", import.meta.url).href,
-  quran: new URL("./download (2).jpg", import.meta.url).href,
-  surahs: new URL("./download (3).jpg", import.meta.url).href,
-  memorize: new URL("./download (4).jpg", import.meta.url).href,
-  names: new URL("./download.jpg", import.meta.url).href,
-};
-
 const ROOM_BACKGROUNDS = {
-  zikr: `linear-gradient(180deg, rgba(3,12,26,0.9), rgba(5,10,20,0.95)), url(${ROOM_IMAGES.zikr})`,
-  quran: `linear-gradient(180deg, rgba(3,15,6,0.9), rgba(4,11,4,0.95)), url(${ROOM_IMAGES.quran})`,
-  surahs: `linear-gradient(180deg, rgba(16,4,8,0.9), rgba(10,3,6,0.95)), url(${ROOM_IMAGES.surahs})`,
-  memorize: `linear-gradient(180deg, rgba(8,4,20,0.9), rgba(5,2,12,0.95)), url(${ROOM_IMAGES.memorize})`,
-  names: `linear-gradient(180deg, rgba(2,12,12,0.9), rgba(1,8,8,0.95)), url(${ROOM_IMAGES.names})`,
+  zikr: "linear-gradient(180deg, rgba(3,12,26,0.9), rgba(5,10,20,0.95))",
+  quran: "linear-gradient(180deg, rgba(3,15,6,0.9), rgba(4,11,4,0.95))",
+  surahs: "linear-gradient(180deg, rgba(16,4,8,0.9), rgba(10,3,6,0.95))",
+  memorize: "linear-gradient(180deg, rgba(8,4,20,0.9), rgba(5,2,12,0.95))",
+  names: "linear-gradient(180deg, rgba(2,12,12,0.9), rgba(1,8,8,0.95))",
 };
 
 const FLOATING_STARS = [
@@ -494,7 +488,56 @@ export default function App() {
         </div>
       </div>
 
-      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>...</div>
+      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">الذِّكر</span>
+            <span className="rtitle-en">ZIKR</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+          <span style={SAVE_STATUS_STYLE}>{saving ? "Saving..." : "Saved"}</span>
+        </div>
+        <div className="room-content">
+          <section className="fsec">
+            <h3 className="fsec-title">Daily Zikr</h3>
+            <div className="zikr-grid">
+              {PRESET_ZIKR.map(z => (
+                <div key={z.key} className="zcard">
+                  <span className="zar">{z.ar}</span>
+                  <span className="zen">{z.en}</span>
+                  <input
+                    className="zinput"
+                    value={localDay.zikr?.[z.key] || ""}
+                    onChange={e => saveZikr(z.key, e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="fsec">
+            <h3 className="fsec-title">Custom Zikr</h3>
+            {Array.from({ length: CUSTOM_ZIKR_ROWS }).map((_, idx) => (
+              <div key={idx} className="input-row" style={{ marginBottom: 12 }}>
+                <input
+                  className="big-input"
+                  placeholder="Zikr name"
+                  value={localDay.customZikr?.[idx]?.name || ""}
+                  onChange={e => saveCustom(idx, "name", e.target.value)}
+                />
+                <input
+                  className="big-input"
+                  placeholder="Count"
+                  value={localDay.customZikr?.[idx]?.count || ""}
+                  onChange={e => saveCustom(idx, "count", e.target.value)}
+                  inputMode="numeric"
+                />
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
       <div id="room-quran" className={roomClass("quran")} style={roomStyle("quran")}>...</div>
       <div id="room-surahs" className={roomClass("surahs")} style={roomStyle("surahs")}>...</div>
       <div id="room-memorize" className={roomClass("memorize")} style={roomStyle("memorize")}>...</div>
