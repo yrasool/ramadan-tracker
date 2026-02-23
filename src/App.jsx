@@ -6,6 +6,8 @@ const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL_DAYS = 30;
 const USERS = ["Yusra", "Zaminah"];
 const USER_RECORD_KEYS = { Yusra: "yusra", Zaminah: "zaminah" };
+const CUSTOM_ZIKR_ROWS = 2;
+const SAVE_STATUS_STYLE = { fontSize: 11, color: "rgba(245,200,66,.85)", letterSpacing: 1.5 };
 
 const PRESET_ZIKR = [
   { key: "SubhanAllah", ar: "سُبحانَ الله", en: "SubhanAllah" },
@@ -494,7 +496,7 @@ export default function App() {
             <span className="rtitle-en">ZIKR</span>
             <span className="rday-lbl">{dayLabel}</span>
           </div>
-          <span style={{ fontSize: 11, color: "rgba(245,200,66,.85)", letterSpacing: 1.5 }}>{saving ? "Saving..." : "Saved"}</span>
+          <span style={SAVE_STATUS_STYLE}>{saving ? "Saving..." : "Saved"}</span>
         </div>
         <div className="room-content">
           <section className="fsec">
@@ -516,7 +518,7 @@ export default function App() {
           </section>
           <section className="fsec">
             <h3 className="fsec-title">Custom Zikr</h3>
-            {Array.from({ length: 2 }).map((_, idx) => (
+            {Array.from({ length: CUSTOM_ZIKR_ROWS }).map((_, idx) => (
               <div key={idx} className="input-row" style={{ marginBottom: 12 }}>
                 <input
                   className="big-input"
