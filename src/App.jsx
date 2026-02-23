@@ -266,6 +266,10 @@ export default function App() {
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
       let savePromise = null;
+      if (!latestDayRef.current) {
+        finalize();
+        return;
+      }
       if (db && latestUserKeyRef.current && latestSelectedDayRef.current) {
         savePromise = set(
           ref(db, `tracker/${latestUserKeyRef.current}/${latestSelectedDayRef.current}`),
@@ -278,7 +282,7 @@ export default function App() {
         }
       };
       if (savePromise) {
-        savePromise.finally(finalize);
+        savePromise.catch(() => null).finally(finalize);
       } else {
         finalize();
       }
