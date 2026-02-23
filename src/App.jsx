@@ -243,6 +243,7 @@ export default function App() {
   const latestDayRef = useRef(localDay);
   const latestUserKeyRef = useRef(userKey);
   const latestSelectedDayRef = useRef(selectedDay);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     if (!db) return;
@@ -271,10 +272,15 @@ export default function App() {
           latestDayRef.current,
         );
       }
+      const finalize = () => {
+        if (isMountedRef.current) {
+          setSaving(false);
+        }
+      };
       if (savePromise) {
-        savePromise.finally(() => setSaving(false));
+        savePromise.finally(finalize);
       } else {
-        setSaving(false);
+        finalize();
       }
     }
 
@@ -284,14 +290,20 @@ export default function App() {
       }
     }
 
-    window.addEventListener("beforeunload", flushPendingSave);
+    window.addEventListener("pagehide", flushPendingSave);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener("beforeunload", flushPendingSave);
+      window.removeEventListener("pagehide", flushPendingSave);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       flushPendingSave();
     };
   }, [db]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     latestDayRef.current = localDay;
