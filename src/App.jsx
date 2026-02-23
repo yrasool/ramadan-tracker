@@ -294,12 +294,7 @@ export default function App() {
 
   function openRoom(id) {
     setOpenDoorId(id);
-    setTransitionPhase("exit");
-    setTimeout(() => {
-      setActiveRoom(id);
-      setTransitionPhase("room");
-    }, 820);
-    setTimeout(() => setTransitionPhase("idle"), 1520);
+    setTimeout(() => setOpenDoorId(null), 1200);
   }
 
   function closeRoom() {
