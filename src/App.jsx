@@ -260,18 +260,38 @@ export default function App() {
   }, [user, selectedDay, allData]);
 
   useEffect(() => {
-    return () => {
-      if (saveTimer.current) {
-        clearTimeout(saveTimer.current);
-        if (db && latestUserKeyRef.current && latestSelectedDayRef.current) {
-          set(
-            ref(db, `tracker/${latestUserKeyRef.current}/${latestSelectedDayRef.current}`),
-            latestDayRef.current,
-          );
-        }
+    function flushPendingSave() {
+      if (!saveTimer.current) return;
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+      let savePromise = null;
+      if (db && latestUserKeyRef.current && latestSelectedDayRef.current) {
+        savePromise = set(
+          ref(db, `tracker/${latestUserKeyRef.current}/${latestSelectedDayRef.current}`),
+          latestDayRef.current,
+        );
       }
+      if (savePromise) {
+        savePromise.finally(() => setSaving(false));
+      } else {
+        setSaving(false);
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        flushPendingSave();
+      }
+    }
+
+    window.addEventListener("beforeunload", flushPendingSave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("beforeunload", flushPendingSave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      flushPendingSave();
     };
-  }, []);
+  }, [db]);
 
   useEffect(() => {
     latestDayRef.current = localDay;
