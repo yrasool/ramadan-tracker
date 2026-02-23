@@ -486,7 +486,56 @@ export default function App() {
         </div>
       </div>
 
-      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>...</div>
+      <div id="room-zikr" className={roomClass("zikr")} style={roomStyle("zikr")}>
+        <div className="room-topbar">
+          <button className="back-btn" onClick={closeRoom}>← Back</button>
+          <div className="room-title-block">
+            <span className="rtitle-ar">الذِّكر</span>
+            <span className="rtitle-en">ZIKR</span>
+            <span className="rday-lbl">{dayLabel}</span>
+          </div>
+          <span style={{ fontSize: 11, color: "rgba(245,200,66,.85)", letterSpacing: 1.5 }}>{saving ? "Saving..." : "Saved"}</span>
+        </div>
+        <div className="room-content">
+          <section className="fsec">
+            <h3 className="fsec-title">Daily Zikr</h3>
+            <div className="zikr-grid">
+              {PRESET_ZIKR.map(z => (
+                <div key={z.key} className="zcard">
+                  <span className="zar">{z.ar}</span>
+                  <span className="zen">{z.en}</span>
+                  <input
+                    className="zinput"
+                    value={localDay.zikr?.[z.key] || ""}
+                    onChange={e => saveZikr(z.key, e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="fsec">
+            <h3 className="fsec-title">Custom Zikr</h3>
+            {Array.from({ length: 2 }).map((_, idx) => (
+              <div key={idx} className="input-row" style={{ marginBottom: 12 }}>
+                <input
+                  className="big-input"
+                  placeholder="Zikr name"
+                  value={localDay.customZikr?.[idx]?.name || ""}
+                  onChange={e => saveCustom(idx, "name", e.target.value)}
+                />
+                <input
+                  className="big-input"
+                  placeholder="Count"
+                  value={localDay.customZikr?.[idx]?.count || ""}
+                  onChange={e => saveCustom(idx, "count", e.target.value)}
+                  inputMode="numeric"
+                />
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
       <div id="room-quran" className={roomClass("quran")} style={roomStyle("quran")}>...</div>
       <div id="room-surahs" className={roomClass("surahs")} style={roomStyle("surahs")}>...</div>
       <div id="room-memorize" className={roomClass("memorize")} style={roomStyle("memorize")}>...</div>
