@@ -37,20 +37,12 @@ const DOORS = [
     glow: "rgba(13,115,115,.9)", glowD: "rgba(4,44,44,.5)" },
 ];
 
-const ROOM_IMAGES = {
-  zikr: new URL("./download (1).jpg", import.meta.url).href,
-  quran: new URL("./download (2).jpg", import.meta.url).href,
-  surahs: new URL("./download (3).jpg", import.meta.url).href,
-  memorize: new URL("./download (4).jpg", import.meta.url).href,
-  names: new URL("./download.jpg", import.meta.url).href,
-};
-
 const ROOM_BACKGROUNDS = {
-  zikr: `linear-gradient(180deg, rgba(3,12,26,0.9), rgba(5,10,20,0.95)), url(${ROOM_IMAGES.zikr})`,
-  quran: `linear-gradient(180deg, rgba(3,15,6,0.9), rgba(4,11,4,0.95)), url(${ROOM_IMAGES.quran})`,
-  surahs: `linear-gradient(180deg, rgba(16,4,8,0.9), rgba(10,3,6,0.95)), url(${ROOM_IMAGES.surahs})`,
-  memorize: `linear-gradient(180deg, rgba(8,4,20,0.9), rgba(5,2,12,0.95)), url(${ROOM_IMAGES.memorize})`,
-  names: `linear-gradient(180deg, rgba(2,12,12,0.9), rgba(1,8,8,0.95)), url(${ROOM_IMAGES.names})`,
+  zikr: "linear-gradient(180deg, rgba(3,12,26,0.9), rgba(5,10,20,0.95))",
+  quran: "linear-gradient(180deg, rgba(3,15,6,0.9), rgba(4,11,4,0.95))",
+  surahs: "linear-gradient(180deg, rgba(16,4,8,0.9), rgba(10,3,6,0.95))",
+  memorize: "linear-gradient(180deg, rgba(8,4,20,0.9), rgba(5,2,12,0.95))",
+  names: "linear-gradient(180deg, rgba(2,12,12,0.9), rgba(1,8,8,0.95))",
 };
 
 const FLOATING_STARS = [
