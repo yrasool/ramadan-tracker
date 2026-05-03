@@ -53,6 +53,8 @@ Stages:
 | Archive Artifacts | Saves the built `dist/` output in Jenkins |
 | Cleanup | Removes the temporary Docker container |
 
+The pipeline also includes a 15-minute timeout, automatic build log rotation, and post-build handlers that capture Docker logs on failure and print a summary on success.
+
 This satisfies the Jenkins requirement because Jenkins performs meaningful automation beyond printing messages. It validates configuration, builds real project code, packages it, runs it, and verifies the running system.
 
 ## Setup Steps
@@ -121,13 +123,17 @@ Add screenshots before submission. The Docker build and local app have been veri
 
 ## Collaboration Evidence
 
-The repository currently documents Yusra's implementation work through commits, branch history, Jenkins screenshots, and the individual contribution statement. Current implementation evidence is summarized in [collaboration.md](collaboration.md), and a completed individual statement is available in [individual-contribution-yusra.md](individual-contribution-yusra.md).
+Both team members contributed to Jenkins and at least one other tool:
 
-If group members are added later, each student should:
+| Student | Jenkins Contribution | Other Contributions |
+|---|---|---|
+| Yusra Rasool | Created the full Jenkins pipeline with all stages | Docker, Nginx, verification scripts, documentation, Firebase integration |
+| Sanaan | Added pipeline timeout, log rotation, and post-build handlers | Docker image labels, Nginx security headers, documentation |
 
-1. Make at least one meaningful commit or pull request.
-2. Contribute to Jenkins, Docker, documentation, Firebase, UI, or testing.
-3. Submit an individual contribution statement using the template.
+Full evidence is in [collaboration.md](collaboration.md). Individual statements:
+
+- [individual-contribution-yusra.md](individual-contribution-yusra.md)
+- [individual-contribution-sanaan.md](individual-contribution-sanaan.md)
 
 ## Individual Contribution Statement
 
