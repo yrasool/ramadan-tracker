@@ -21,6 +21,10 @@ RUN npm run ci && npm run smoke
 
 FROM nginx:1.27-alpine AS runtime
 
+LABEL maintainer="yrasool, sanaan"
+LABEL description="Ramadan Tracker — CIS 4930 Cumulative Project"
+LABEL version="1.0"
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html/ramadan-tracker
 

@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  options {
+    timeout(time: 15, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+
   environment {
     IMAGE_NAME = 'ramadan-tracker:jenkins'
     CONTAINER_NAME = 'ramadan-tracker-jenkins'
@@ -74,6 +79,20 @@ pipeline {
       }
     }
 
+    stage('Health Check') {
+      steps {
+        sh '''
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APP_PORT/health")
+          if [ "$STATUS" = "200" ]; then
+            echo "Health endpoint returned 200 OK"
+          else
+            echo "Health endpoint returned $STATUS"
+            exit 1
+          fi
+        '''
+      }
+    }
+
     stage('Archive Artifacts') {
       steps {
         archiveArtifacts artifacts: 'dist/**', fingerprint: true
@@ -84,6 +103,13 @@ pipeline {
   post {
     always {
       sh 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true'
+    }
+    failure {
+      sh 'docker logs "$CONTAINER_NAME" 2>&1 || true'
+      echo 'Pipeline failed — check the stage logs above for details.'
+    }
+    success {
+      echo "Build ${env.BUILD_NUMBER} passed. Artifacts archived from dist/."
     }
   }
 }

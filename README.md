@@ -135,6 +135,7 @@ The class report and contribution materials are in `docs/`:
 - [docs/contribution-template.md](docs/contribution-template.md)
 - [docs/collaboration.md](docs/collaboration.md)
 - [docs/individual-contribution-yusra.md](docs/individual-contribution-yusra.md)
+- [docs/individual-contribution-sanaan.md](docs/individual-contribution-sanaan.md)
 
 Recommended screenshots for submission:
 
