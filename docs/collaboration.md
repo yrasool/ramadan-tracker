@@ -27,9 +27,9 @@ cis4930-jenkins-docker-project
 
 | Area | Yusra | Sanaan |
 |---|---|---|
-| Jenkins | Created the full pipeline (checkout, install, verify, build, Docker build, run, smoke test, archive, cleanup) | Added pipeline timeout, build log rotation, and post-build failure/success handlers |
+| Jenkins | Created the full pipeline (checkout, install, verify, build, Docker build, run, smoke test, archive, cleanup) | Added pipeline timeout, build log rotation, post-build failure/success handlers, and Health Check stage |
 | Docker | Created `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Added image metadata labels (maintainer, description, version) |
-| Nginx | Created `nginx.conf` with routing and health check | Added security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) |
+| Nginx | Created `nginx.conf` with routing and health check | Added security headers, gzip compression for static assets |
 | Verification | Created `scripts/check-build-config.mjs` and `scripts/smoke-dist.mjs` | |
 | Documentation | README, project report, architecture diagram | Updated collaboration evidence, project report, individual contribution statement |
 
@@ -49,11 +49,13 @@ ac6848c Address final project review findings
 7295c4a Add pipeline timeout, build log rotation, and post-build handlers
 1c5f35e Add container metadata labels to Dockerfile
 7b310bd Add security headers to Nginx configuration
+342b511 Enable gzip compression for static assets in Nginx
+0ca5b09 Add Health Check stage to Jenkins pipeline
 ```
 
 ## Pull Requests
 
-- `sanaan/pipeline-hardening` into `cis4930-jenkins-docker-project` — pipeline hardening, Docker labels, Nginx security headers
+- `sanaan/pipeline-hardening` into `cis4930-jenkins-docker-project` — pipeline hardening, Docker labels, Nginx security headers, gzip compression, health check stage
 
 ## Local Verification Evidence
 

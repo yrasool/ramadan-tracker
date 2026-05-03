@@ -50,6 +50,7 @@ Stages:
 | Docker Build | Builds the Docker image with Vite build arguments |
 | Run Container | Starts the built image on port `8080` |
 | Smoke Test | Requests the running app and fails if it is not served |
+| Health Check | Verifies the Nginx `/health` endpoint returns HTTP 200 |
 | Archive Artifacts | Saves the built `dist/` output in Jenkins |
 | Cleanup | Removes the temporary Docker container |
 
@@ -128,7 +129,7 @@ Both team members contributed to Jenkins and at least one other tool:
 | Student | Jenkins Contribution | Other Contributions |
 |---|---|---|
 | Yusra Rasool | Created the full Jenkins pipeline with all stages | Docker, Nginx, verification scripts, documentation, Firebase integration |
-| Sanaan | Added pipeline timeout, log rotation, and post-build handlers | Docker image labels, Nginx security headers, documentation |
+| Sanaan | Added pipeline timeout, log rotation, post-build handlers, and Health Check stage | Docker image labels, Nginx security headers, gzip compression, documentation |
 
 Full evidence is in [collaboration.md](collaboration.md). Individual statements:
 

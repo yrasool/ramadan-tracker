@@ -17,6 +17,8 @@ I hardened the Jenkins pipeline, Docker image, and Nginx server configuration fo
 - Added `post > success` handler that prints a build summary with the build number.
 - Added `LABEL` metadata (maintainer, description, version) to the Dockerfile for image traceability.
 - Added `X-Content-Type-Options`, `X-Frame-Options`, and `Referrer-Policy` security headers to the Nginx configuration.
+- Enabled gzip compression in Nginx for static assets (JS, CSS, JSON, SVG) with a 256-byte minimum threshold.
+- Added a Health Check stage to the Jenkins pipeline that verifies the `/health` endpoint returns HTTP 200.
 - Updated collaboration evidence and project report documentation to reflect team contributions.
 
 ## Evidence
@@ -28,14 +30,16 @@ I hardened the Jenkins pipeline, Docker image, and Nginx server configuration fo
   - `7295c4a Add pipeline timeout, build log rotation, and post-build handlers`
   - `1c5f35e Add container metadata labels to Dockerfile`
   - `7b310bd Add security headers to Nginx configuration`
+  - `342b511 Enable gzip compression for static assets in Nginx`
+  - `0ca5b09 Add Health Check stage to Jenkins pipeline`
 
 ## Jenkins Contribution
 
-I improved the Jenkins pipeline by adding an `options` block with a 15-minute timeout so stuck builds do not run indefinitely, and a `buildDiscarder` to automatically rotate old build logs. I also added `post` handlers so that on failure the pipeline captures Docker container logs for debugging, and on success it prints a summary confirming the build number and artifact archival.
+I improved the Jenkins pipeline by adding an `options` block with a 15-minute timeout so stuck builds do not run indefinitely, and a `buildDiscarder` to automatically rotate old build logs. I added `post` handlers so that on failure the pipeline captures Docker container logs for debugging, and on success it prints a summary confirming the build number and artifact archival. I also added a dedicated Health Check stage that verifies the Nginx `/health` endpoint returns HTTP 200 after the container starts, providing a separate validation layer beyond the existing smoke test.
 
 ## Other Tool Contribution
 
-I added security headers to the Nginx configuration (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) to harden the production server against common web vulnerabilities. I also added metadata labels to the Dockerfile so the built image is traceable to the project and its maintainers.
+I added security headers to the Nginx configuration (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) to harden the production server against common web vulnerabilities. I enabled gzip compression in Nginx for static assets to improve page load performance. I also added metadata labels to the Dockerfile so the built image is traceable to the project and its maintainers.
 
 ## Reflection
 
