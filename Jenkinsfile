@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  options {
+    timeout(time: 15, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+
   environment {
     IMAGE_NAME = 'ramadan-tracker:jenkins'
     CONTAINER_NAME = 'ramadan-tracker-jenkins'
@@ -84,6 +89,13 @@ pipeline {
   post {
     always {
       sh 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true'
+    }
+    failure {
+      sh 'docker logs "$CONTAINER_NAME" 2>&1 || true'
+      echo 'Pipeline failed — check the stage logs above for details.'
+    }
+    success {
+      echo "Build ${env.BUILD_NUMBER} passed. Artifacts archived from dist/."
     }
   }
 }
