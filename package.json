@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check": "node scripts/check-build-config.mjs",
+    "ci": "npm run check && npm run build",
     "build": "vite build",
     "preview": "vite preview",
+    "smoke": "node scripts/smoke-dist.mjs",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
