@@ -1,9 +1,5 @@
 FROM node:20-alpine AS build
 
-LABEL maintainer="yrasool, sanaan"
-LABEL description="Ramadan Tracker — CIS 4930 Cumulative Project"
-LABEL version="1.0"
-
 WORKDIR /app
 
 COPY package*.json ./
@@ -24,6 +20,10 @@ ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 RUN npm run ci && npm run smoke
 
 FROM nginx:1.27-alpine AS runtime
+
+LABEL maintainer="yrasool, sanaan"
+LABEL description="Ramadan Tracker — CIS 4930 Cumulative Project"
+LABEL version="1.0"
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html/ramadan-tracker
