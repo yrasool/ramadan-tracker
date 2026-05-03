@@ -1,5 +1,9 @@
 FROM node:20-alpine AS build
 
+LABEL maintainer="yrasool, sanaan"
+LABEL description="Ramadan Tracker — CIS 4930 Cumulative Project"
+LABEL version="1.0"
+
 WORKDIR /app
 
 COPY package*.json ./
