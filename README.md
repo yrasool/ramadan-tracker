@@ -67,7 +67,7 @@ npm run smoke
 
 ## Docker Demo
 
-Create `.env.local` or export the required variables in your shell, then run:
+Create `.env.local`, copy `.env.example` to `.env`, or export the required variables in your shell, then run:
 
 ```bash
 docker compose up --build
@@ -127,6 +127,8 @@ The class report and contribution materials are in `docs/`:
 - [docs/project-report.md](docs/project-report.md)
 - [docs/architecture.md](docs/architecture.md)
 - [docs/contribution-template.md](docs/contribution-template.md)
+- [docs/collaboration.md](docs/collaboration.md)
+- [docs/individual-contribution-yusra.md](docs/individual-contribution-yusra.md)
 
 Recommended screenshots for submission:
 

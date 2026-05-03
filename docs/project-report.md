@@ -109,19 +109,19 @@ The final demo should show:
 
 ## Screenshots Checklist
 
-Add screenshots before submission:
+Add screenshots before submission. The Docker build and local app have been verified; the remaining screenshots should be captured from the final Jenkins run and GitHub UI.
 
 - [ ] GitHub repository main page.
 - [ ] Commit history or pull request showing project work.
 - [ ] Jenkins pipeline successful stage view.
 - [ ] Jenkins console output with Docker build and smoke test.
-- [ ] Browser showing Docker-served app.
+- [x] Browser showing Docker-served app returning HTTP 200 locally.
 - [ ] Browser showing GitHub Pages deployment.
 - [ ] Firebase console or app interaction evidence, if allowed by the instructor.
 
 ## Collaboration Evidence
 
-The repository supports collaboration evidence through commits, pull requests, Jenkins screenshots, and the contribution statement template in [contribution-template.md](contribution-template.md).
+The repository supports collaboration evidence through commits, branch history, Jenkins screenshots, and the contribution statement template in [contribution-template.md](contribution-template.md). Current implementation evidence is summarized in [collaboration.md](collaboration.md), and a completed individual statement is available in [individual-contribution-yusra.md](individual-contribution-yusra.md).
 
 If group members are added later, each student should:
 
