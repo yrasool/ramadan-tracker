@@ -10,7 +10,7 @@ This repository has been extended into a small DevOps workflow project using:
 
 | Tool | Role |
 |---|---|
-| GitHub | Source control, collaboration evidence, and GitHub Pages deployment |
+| GitHub | Source control, contribution history, and GitHub Pages deployment |
 | Jenkins | Required automation pipeline |
 | Docker | Reproducible container image for the built app |
 | Nginx | Static production server inside the Docker image |
@@ -67,10 +67,16 @@ npm run smoke
 
 ## Docker Demo
 
-Create `.env.local`, copy `.env.example` to `.env`, or export the required variables in your shell, then run:
+Create `.env` with real Firebase values or export the required variables in your shell, then run:
 
 ```bash
 docker compose up --build
+```
+
+If you prefer `.env.local`, pass it explicitly:
+
+```bash
+docker compose --env-file .env.local up --build
 ```
 
 Open:
@@ -136,6 +142,7 @@ Recommended screenshots for submission:
 - Jenkins stage view after a successful run.
 - Jenkins console output showing Docker build and smoke test.
 - Docker-served app at `http://localhost:8080/ramadan-tracker/`.
+- Jenkins-served smoke-test app at `http://localhost:8090/ramadan-tracker/`.
 - GitHub Pages live app.
 
 ## File Structure

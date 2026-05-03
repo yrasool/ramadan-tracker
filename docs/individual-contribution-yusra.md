@@ -16,7 +16,7 @@ I implemented the DevOps workflow for the Ramadan Tracker cumulative project. My
 - Added Docker support with `Dockerfile`, `docker-compose.yml`, `.dockerignore`, and `nginx.conf`.
 - Added verification scripts for Firebase build configuration and static build output.
 - Updated the README with local setup, Docker setup, Jenkins setup, GitHub Pages notes, and demo instructions.
-- Added project documentation, architecture diagram, report draft, and collaboration evidence.
+- Added project documentation, architecture diagram, report draft, and contribution evidence.
 
 ## Evidence
 
@@ -55,4 +55,4 @@ http://localhost:8080/ramadan-tracker/
 
 ## Reflection
 
-This project helped me connect a frontend app to a realistic delivery workflow. Jenkins handled automated validation, Docker made the app reproducible, Nginx served the production build, GitHub preserved the collaboration history, and Firebase remained the live data layer.
+This project helped me connect a frontend app to a realistic delivery workflow. Jenkins handled automated validation, Docker made the app reproducible, Nginx served the production build, GitHub preserved the contribution history, and Firebase remained the live data layer.

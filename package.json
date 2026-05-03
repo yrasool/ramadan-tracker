@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node scripts/smoke-dist.mjs",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run ci && gh-pages -d dist"
   },
   "dependencies": {
     "firebase": "^10.7.0",

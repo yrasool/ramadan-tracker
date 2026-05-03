@@ -22,7 +22,7 @@ https://yrasool.github.io/ramadan-tracker/
 
 | Tool | How it is used |
 |---|---|
-| GitHub | Source control, repository history, and collaboration evidence |
+| GitHub | Source control, repository history, and contribution evidence |
 | Jenkins | Required automation pipeline |
 | Docker | Builds a reproducible runtime image |
 | Nginx | Serves the production static app inside Docker |
@@ -121,7 +121,7 @@ Add screenshots before submission. The Docker build and local app have been veri
 
 ## Collaboration Evidence
 
-The repository supports collaboration evidence through commits, branch history, Jenkins screenshots, and the contribution statement template in [contribution-template.md](contribution-template.md). Current implementation evidence is summarized in [collaboration.md](collaboration.md), and a completed individual statement is available in [individual-contribution-yusra.md](individual-contribution-yusra.md).
+The repository currently documents Yusra's implementation work through commits, branch history, Jenkins screenshots, and the individual contribution statement. Current implementation evidence is summarized in [collaboration.md](collaboration.md), and a completed individual statement is available in [individual-contribution-yusra.md](individual-contribution-yusra.md).
 
 If group members are added later, each student should:
 
@@ -141,7 +141,7 @@ Use [contribution-template.md](contribution-template.md) for each student. The s
 | Jenkins implementation | `Jenkinsfile` with build, Docker, run, and smoke-test stages |
 | At least three tools | GitHub, Jenkins, Docker, Nginx, Firebase, GitHub Pages |
 | Working final system | `docker compose up --build` serves the app locally |
-| Collaboration evidence | GitHub commits/PRs and contribution template |
+| Contribution evidence | GitHub commits/PRs and contribution template |
 | Documentation and reproducibility | README, project report, architecture diagram, setup steps |
 
 ## Notes On Secrets

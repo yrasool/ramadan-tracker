@@ -22,6 +22,14 @@ const requiredEnvVars = [
 ];
 
 const missing = requiredEnvVars.filter((name) => !process.env[name]);
+const placeholderValues = new Set([
+  "your_api_key",
+  "your_sender_id",
+  "your_app_id",
+]);
+const placeholders = requiredEnvVars.filter((name) =>
+  placeholderValues.has(process.env[name])
+);
 
 if (missing.length > 0) {
   console.error("Missing required Firebase build variables:");
@@ -31,6 +39,14 @@ if (missing.length > 0) {
   console.error(
     "Set these in .env.local for local builds, GitHub Actions secrets, or Jenkins credentials."
   );
+  process.exit(1);
+}
+
+if (placeholders.length > 0) {
+  console.error("Replace placeholder Firebase build variables before building:");
+  for (const name of placeholders) {
+    console.error(`- ${name}`);
+  }
   process.exit(1);
 }
 

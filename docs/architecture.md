@@ -23,7 +23,7 @@ flowchart LR
 
 | Tool | Responsibility |
 |---|---|
-| GitHub | Stores source code, commit history, collaboration evidence, and project deliverables |
+| GitHub | Stores source code, commit history, contribution evidence, and project deliverables |
 | Jenkins | Automates install, verify, build, Docker image creation, container run, and smoke test |
 | Docker | Packages the built app into a reproducible container |
 | Nginx | Serves the production static files in the Docker container |
