@@ -79,6 +79,20 @@ pipeline {
       }
     }
 
+    stage('Health Check') {
+      steps {
+        sh '''
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APP_PORT/health")
+          if [ "$STATUS" = "200" ]; then
+            echo "Health endpoint returned 200 OK"
+          else
+            echo "Health endpoint returned $STATUS"
+            exit 1
+          fi
+        '''
+      }
+    }
+
     stage('Archive Artifacts') {
       steps {
         archiveArtifacts artifacts: 'dist/**', fingerprint: true
