@@ -101,7 +101,7 @@ http://localhost:8080/ramadan-tracker/
 
 ## Demonstration Plan
 
-The final demo should show:
+The final demo s
 
 1. GitHub repository and commit history.
 2. Jenkins successful stage view.
@@ -110,9 +110,7 @@ The final demo should show:
 5. GitHub Pages live app at `https://yrasool.github.io/ramadan-tracker/`.
 6. Firebase-backed tracker interaction in the browser.
 
-## Screenshots Checklist
-
-Add screenshots before submission. The Docker build and local app have been verified; the remaining screenshots should be captured from the final Jenkins run and GitHub UI.
+## Screenshots 
 
 - [ ] GitHub repository main page.
 - [ ] Commit history or pull request showing project work.
@@ -124,17 +122,14 @@ Add screenshots before submission. The Docker build and local app have been veri
 
 ## Collaboration Evidence
 
-Both team members contributed to Jenkins and at least one other tool:
+ contributed to Jenkins and at least one other tool:
 
 | Student | Jenkins Contribution | Other Contributions |
 |---|---|---|
 | Yusra Rasool | Created the full Jenkins pipeline with all stages | Docker, Nginx, verification scripts, documentation, Firebase integration |
 | Sanaan | Added pipeline timeout, log rotation, post-build handlers, and Health Check stage | Docker image labels, Nginx security headers, gzip compression, documentation |
 
-Full evidence is in [collaboration.md](collaboration.md). Individual statements:
-
-- [individual-contribution-yusra.md](individual-contribution-yusra.md)
-- [individual-contribution-sanaan.md](individual-contribution-sanaan.md)
+Full evidence is in documents submitted on Canvas.
 
 ## Individual Contribution Statement
 
