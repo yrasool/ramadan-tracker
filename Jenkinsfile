@@ -1,3 +1,6 @@
+// Run this pipeline with the custom Jenkins image defined in jenkins/Dockerfile.
+// That image bundles Node.js 20 and the Docker CLI so every stage works when
+// the host Docker socket is mounted into the Jenkins container.
 pipeline {
   agent any
 
@@ -63,13 +66,17 @@ pipeline {
     stage('Smoke Test') {
       steps {
         sh '''
-          for attempt in 1 2 3 4 5; do
-            if curl -fsS "$APP_URL" | grep -q '<div id="root"></div>'; then
-              echo "Application smoke test passed at $APP_URL"
+          CONTAINER_IP=$(docker inspect -f \
+            '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+            "$CONTAINER_NAME")
+          INTERNAL_URL="http://${CONTAINER_IP}/ramadan-tracker/"
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if curl -fsS "$INTERNAL_URL" | grep -q '<div id="root"></div>'; then
+              echo "Application smoke test passed at $INTERNAL_URL"
               exit 0
             fi
-            echo "Waiting for app to become available..."
-            sleep 2
+            echo "Attempt $attempt: waiting for app to become available..."
+            sleep 3
           done
 
           echo "Application smoke test failed."
@@ -82,7 +89,11 @@ pipeline {
     stage('Health Check') {
       steps {
         sh '''
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APP_PORT/health")
+          CONTAINER_IP=$(docker inspect -f \
+            '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+            "$CONTAINER_NAME")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "http://${CONTAINER_IP}/health")
           if [ "$STATUS" = "200" ]; then
             echo "Health endpoint returned 200 OK"
           else
