@@ -152,9 +152,9 @@ Recommended screenshots for submission:
 ramadan-tracker/
   .github/workflows/deploy.yml
   docs/
-    architecture.md
-    contribution-template.md
-    project-report.md
+    architecture
+    contribution-template
+    project-report
   scripts/
     check-build-config.mjs
     smoke-dist.mjs
