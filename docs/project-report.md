@@ -120,7 +120,7 @@ Add screenshots before submission. The Docker build and local app have been veri
 - [ ] Jenkins console output with Docker build and smoke test.
 - [x] Browser showing Docker-served app returning HTTP 200 locally.
 - [ ] Browser showing GitHub Pages deployment.
-- [ ] Firebase console or app interaction evidence, if allowed by the instructor.
+- [ ] Firebase console or app interaction evidenc
 
 ## Collaboration Evidence
 
