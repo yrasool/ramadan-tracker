@@ -93,11 +93,25 @@ http://localhost:8080/ramadan-tracker/
 
 ### Jenkins
 
-1. Create a Jenkins Pipeline job.
-2. Point it to `https://github.com/yrasool/ramadan-tracker`.
-3. Configure the three Firebase Vite variables as Jenkins environment variables or credentials.
-4. Run the pipeline from `Jenkinsfile`.
-5. Confirm the `Smoke Test` stage passes.
+1. Build the custom Jenkins image (includes Node.js 20 and Docker CLI):
+
+   ```powershell
+   docker build -t jenkins-node-docker ./jenkins
+   ```
+
+2. Run Jenkins with the host Docker socket mounted (PowerShell backtick continuation):
+
+   ```powershell
+   docker run -d --name jenkins `
+     -p 8081:8080 -p 50000:50000 `
+     -v jenkins_home:/var/jenkins_home `
+     -v /var/run/docker.sock:/var/run/docker.sock `
+     jenkins-node-docker
+   ```
+
+3. Open `http://localhost:8081`, log in, and configure the three Firebase environment variables in **Manage Jenkins → System → Global properties → Environment variables**.
+4. Create a Pipeline job pointing to `https://github.com/yrasool/ramadan-tracker` and run it from `Jenkinsfile`.
+5. Confirm the `Smoke Test` and `Health Check` stages pass.
 
 ## Demonstration Plan
 

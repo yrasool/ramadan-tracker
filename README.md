@@ -93,26 +93,97 @@ docker compose down
 
 ## Jenkins Setup
 
-1. Install Jenkins on a machine that also has Node.js, npm, Docker, and Git.
-2. Create a Jenkins Pipeline job that points to this GitHub repository.
-3. Configure these Jenkins environment variables or credentials:
-   - `VITE_FIREBASE_API_KEY`
-   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
-   - `VITE_FIREBASE_APP_ID`
-4. Run the pipeline from the repository `Jenkinsfile`.
-5. Capture screenshots of the successful stages and console output for the project report.
+The repository ships a custom Jenkins image (`jenkins/Dockerfile`) that bundles **Node.js 20** and the **Docker CLI** so the pipeline works inside a Jenkins-in-Docker environment without any extra manual setup.
 
-Pipeline stages:
+### 1 — Build the custom Jenkins image
 
-- Checkout
-- Install
-- Verify
-- Build
-- Docker Build
-- Run Container
-- Smoke Test
-- Archive Artifacts
-- Cleanup
+Open a terminal (PowerShell on Windows) in the repository root and run:
+
+```powershell
+docker build -t jenkins-node-docker ./jenkins
+```
+
+### 2 — Start Jenkins
+
+**PowerShell** (use backtick `` ` `` for line continuation):
+
+```powershell
+docker run -d --name jenkins `
+  -p 8081:8080 -p 50000:50000 `
+  -v jenkins_home:/var/jenkins_home `
+  -v /var/run/docker.sock:/var/run/docker.sock `
+  jenkins-node-docker
+```
+
+> Port `8081` is used here to avoid conflicts with other services on `8080`.
+> The `-v /var/run/docker.sock:/var/run/docker.sock` mount gives Jenkins access to
+> the host Docker daemon so it can run `docker build` and `docker run`.
+
+Open Jenkins in your browser:
+
+```text
+http://localhost:8081
+```
+
+Because the image sets `JAVA_OPTS=-Djenkins.install.runSetupWizard=false` the
+setup wizard is skipped. Log in with the initial admin password:
+
+```powershell
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+### 3 — Install required plugins
+
+In **Manage Jenkins → Plugins → Available**, install:
+
+- **Git** (usually pre-installed)
+- **Pipeline** (usually pre-installed)
+
+### 4 — Configure Firebase credentials
+
+In **Manage Jenkins → System → Global properties → Environment variables**, add:
+
+| Name | Value |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | your Firebase API key |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | your Firebase sender ID |
+| `VITE_FIREBASE_APP_ID` | your Firebase app ID |
+
+### 5 — Create the Pipeline job
+
+1. **New Item** → enter a name → select **Pipeline** → OK.
+2. Under **Pipeline**, set **Definition** to `Pipeline script from SCM`.
+3. Set **SCM** to `Git`, **Repository URL** to `https://github.com/yrasool/ramadan-tracker`.
+4. Set **Script Path** to `Jenkinsfile`.
+5. Save and click **Build Now**.
+
+### Pipeline stages
+
+| Stage | What it does |
+|---|---|
+| Checkout | Pulls the latest source from GitHub |
+| Install | `npm ci` — reproducible dependency install |
+| Verify | `npm run check` — confirms Firebase build variables are set |
+| Build | `npm run build` and `npm run smoke` — produces `dist/` |
+| Docker Build | Builds the Docker image with Vite build arguments |
+| Run Container | Starts the image; app is reachable on port `8090` |
+| Smoke Test | Curls the running container and checks for the React root element |
+| Health Check | Checks that Nginx `/health` returns HTTP 200 |
+| Archive Artifacts | Saves `dist/` in Jenkins for download |
+| Cleanup | Removes the temporary container in the `post` block |
+
+### Stop and remove Jenkins
+
+```powershell
+docker stop jenkins
+docker rm jenkins
+```
+
+To also remove all Jenkins data:
+
+```powershell
+docker volume rm jenkins_home
+```
 
 ## GitHub Pages Deployment
 
