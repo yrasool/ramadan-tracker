@@ -130,12 +130,12 @@ Required GitHub settings:
 
 The class report and contribution materials are in `docs/`:
 
-- [docs/project-report.md](docs/project-report.md)
-- [docs/architecture.md](docs/architecture.md)
-- [docs/contribution-template.md](docs/contribution-template.md)
-- [docs/collaboration.md](docs/collaboration.md)
-- [docs/individual-contribution-yusra.md](docs/individual-contribution-yusra.md)
-- [docs/individual-contribution-sanaan.md](docs/individual-contribution-sanaan.md)
+- [docs/project-report docs/project-report
+- [docs/architecturedocs/architecture
+- [docs/contribution-template.docs/contribution-template
+- [docs/collaborationdocs/collaboration
+- [docs/individual-contribution-yusradocs/individual-contribution-yusra
+- [docs/individual-contribution-sanaandocs/individual-contribution-sanaan
 
 Recommended screenshots for submission:
 
