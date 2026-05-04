@@ -137,14 +137,7 @@ The class report and contribution materials are in `docs/`:
 - [docs/individual-contribution-yusradocs/individual-contribution-yusra
 - [docs/individual-contribution-sanaandocs/individual-contribution-sanaan
 
-Recommended screenshots for submission:
 
-- GitHub repository with commits or pull request evidence.
-- Jenkins stage view after a successful run.
-- Jenkins console output showing Docker build and smoke test.
-- Docker-served app at `http://localhost:8080/ramadan-tracker/`.
-- Jenkins-served smoke-test app at `http://localhost:8090/ramadan-tracker/`.
-- GitHub Pages live app.
 
 ## File Structure
 
